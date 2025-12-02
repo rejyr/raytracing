@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub},
 };
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Vec3 {
     pub e: [f64; 3],
 }
@@ -140,7 +140,7 @@ impl Vec3 {
     }
 
     pub fn unit_vector(&self) -> Self {
-        self.clone() / self.length()
+        *self / self.length()
     }
 }
 
