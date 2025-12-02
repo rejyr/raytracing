@@ -11,9 +11,11 @@ pub fn write_color(out: &mut impl Write, pixel_color: &Color) -> Result<(), std:
     let g = pixel_color.y();
     let b = pixel_color.z();
 
+    // Translate the [0,1] component values to the byte range [0,255].
     let rbyte = (256.0 * INTENSITY.clamp(r)) as i32;
     let gbyte = (256.0 * INTENSITY.clamp(g)) as i32;
     let bbyte = (256.0 * INTENSITY.clamp(b)) as i32;
 
+    // Write out the pixel color components.
     writeln!(out, "{rbyte} {gbyte} {bbyte}")
 }
