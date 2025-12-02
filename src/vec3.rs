@@ -125,7 +125,7 @@ impl Vec3 {
         )
     }
 
-    pub fn random_unit_vector() -> Vec3 {
+    pub fn random_unit_vector() -> Self {
         loop {
             let p = Vec3::random_in_range(-1.0, 1.0);
             let lensq = p.length_squared();
@@ -135,7 +135,7 @@ impl Vec3 {
         }
     }
 
-    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+    pub fn random_on_hemisphere(normal: &Vec3) -> Self {
         let on_unit_sphere = Vec3::random_unit_vector();
         if on_unit_sphere.dot(normal) > 0.0 {
             on_unit_sphere
@@ -176,7 +176,7 @@ impl Vec3 {
         *self / self.length()
     }
 
-    pub fn reflect(&self, n: &Vec3) -> Vec3 {
+    pub fn reflect(&self, n: &Vec3) -> Self {
         *self - 2.0 * self.dot(n) * (*n)
     }
 
