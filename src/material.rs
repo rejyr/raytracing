@@ -96,8 +96,9 @@ impl Material for Dielectric {
         let unit_direction = r_in.direction().unit_vector();
         let cos_theta = (-unit_direction).dot(&rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+
         let cannot_refract = ri * sin_theta > 1.0;
-        let direction = if cannot_refract {
+        let direction = if cannot_refract || Self::reflectance(cos_theta, ri) > fastrand::f64() {
             unit_direction.reflect(&rec.normal)
         } else {
             unit_direction.refract(&rec.normal, ri)
@@ -111,5 +112,12 @@ impl Material for Dielectric {
 impl Dielectric {
     pub fn new(refraction_index: f64) -> Self {
         Self { refraction_index }
+    }
+
+    /// Use Schlick's approximation for reflectance.
+    fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
+        let r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
+        let r0 = r0 * r0;
+        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
     }
 }
