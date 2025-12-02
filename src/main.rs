@@ -16,6 +16,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 400;
     cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
 
     let mut out = BufWriter::new(stdout());
     cam.render(&mut out, &world)?;
