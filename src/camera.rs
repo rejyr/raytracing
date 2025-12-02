@@ -53,7 +53,7 @@ impl Default for Camera {
 impl Camera {
     fn initialize(&mut self) {
         self.image_height = {
-            let image_height = self.image_width / self.aspect_ratio as i32;
+            let image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
             if image_height < 1 { 1 } else { image_height }
         };
 
@@ -64,7 +64,7 @@ impl Camera {
         // Determine viewport dimensions.
         let focal_length = 1.0;
         let viewport_height = 2.0;
-        let viewport_width = viewport_height * (self.image_width / self.image_height) as f64;
+        let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
         let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
