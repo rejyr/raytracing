@@ -103,11 +103,15 @@ impl Camera {
             return Color::new(0.0, 0.0, 0.0);
         }
 
-        let mut rec = HitRecord::default();
+        let mut rec = HitRecord::default_with_default_lambertian();
 
         if world.hit(r, Interval::new(0.001, f64::INFINITY), &mut rec) {
-            let direction = rec.normal + Vec3::random_unit_vector();
-            return 0.5 * Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world);
+            let mut scattered = Ray::default();
+            let mut attenuation = Color::default();
+            if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
+                return attenuation * Self::ray_color(&scattered, depth - 1, world);
+            }
+            return Color::new(0.0, 0.0, 0.0);
         }
 
         let unit_direction = r.direction().unit_vector();

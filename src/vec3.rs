@@ -175,6 +175,16 @@ impl Vec3 {
     pub fn unit_vector(&self) -> Self {
         *self / self.length()
     }
+
+    pub fn reflect(&self, n: &Vec3) -> Vec3 {
+        *self - 2.0 * self.dot(n) * (*n)
+    }
+
+    /// Return true if the vector is close to zero in all dimensions.
+    pub fn is_near_zero(&self) -> bool {
+        let s = 1e-8;
+        (self[0].abs() < s) && (self[1].abs() < s) && (self[2].abs() < s)
+    }
 }
 
 pub type Point3 = Vec3;

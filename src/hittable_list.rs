@@ -13,7 +13,7 @@ pub struct HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = HitRecord::default();
+        let mut temp_rec = HitRecord::default_with_default_lambertian();
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.max;
 
