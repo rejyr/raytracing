@@ -1,30 +1,19 @@
 use std::error::Error;
 use std::io::{BufWriter, Write, stdout};
+use std::rc::Rc;
 
 use raytracing::color::{Color, write_color};
+use raytracing::hittable::{HitRecord, Hittable};
+use raytracing::hittable_list::HittableList;
 use raytracing::ray::Ray;
+use raytracing::sphere::Sphere;
 use raytracing::vec3::{Point3, Vec3};
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
-    let oc = *center - *r.origin();
-    let a = r.direction().length_squared();
-    let h = r.direction().dot(&oc);
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = h * h - a * c;
-
-    if discriminant < 0.0 {
-        -1.0
-    } else {
-        (h - discriminant.sqrt()) / a
+fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+    let mut rec = HitRecord::default();
+    if world.hit(r, 0.0, f64::INFINITY, &mut rec) {
+        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
-}
-
-fn ray_color(r: &Ray) -> Color {
-    let t = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        let n = r.at(t) - Vec3::new(0.0, 0.0, -1.0);
-        return 0.5 * Color::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
-    };
 
     let unit_direction = r.direction().unit_vector();
     let a = 0.5 * (unit_direction.y() + 1.0);
@@ -38,6 +27,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         let image_height = image_width / aspect_ratio as i32;
         if image_height < 1 { 1 } else { image_height }
     };
+
+    let mut world = HittableList::default();
+    world.add(Rc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Rc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     let focal_length = 1.0;
     let viewport_height = 2.0;
@@ -66,7 +59,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(camera_center, ray_direction);
 
-            let pixel_color = ray_color(&r);
+            let pixel_color = ray_color(&r, &world);
             write_color(&mut out, &pixel_color)?;
         }
     }
