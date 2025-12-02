@@ -5,13 +5,14 @@ use std::rc::Rc;
 use raytracing::color::{Color, write_color};
 use raytracing::hittable::{HitRecord, Hittable};
 use raytracing::hittable_list::HittableList;
+use raytracing::interval::Interval;
 use raytracing::ray::Ray;
 use raytracing::sphere::Sphere;
 use raytracing::vec3::{Point3, Vec3};
 
 fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
     let mut rec = HitRecord::default();
-    if world.hit(r, 0.0, f64::INFINITY, &mut rec) {
+    if world.hit(r, Interval::new(0.0, f64::INFINITY), &mut rec) {
         return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
 
