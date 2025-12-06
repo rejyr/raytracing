@@ -1,14 +1,13 @@
 use crate::{color::Color, hittable::HitRecord, ray::Ray, vec3::Vec3};
 
-// TODO: refactor to return `ScatterRecord`
 pub trait Material {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord>;
+}
+
+#[derive(Debug, Clone)]
+pub struct ScatterRecord {
+    pub attenuation: Color,
+    pub scattered: Ray,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -17,13 +16,7 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(
-        &self,
-        _r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
 
         // Catch degenerate scatter direction
@@ -31,9 +24,13 @@ impl Material for Lambertian {
             scatter_direction = rec.normal;
         }
 
-        *scattered = Ray::new(rec.p, scatter_direction);
-        *attenuation = self.albedo;
-        true
+        let scattered = Ray::new(rec.p, scatter_direction);
+        let attenuation = self.albedo;
+
+        Some(ScatterRecord {
+            attenuation,
+            scattered,
+        })
     }
 }
 
@@ -50,18 +47,15 @@ pub struct Metal {
 }
 
 impl Material for Metal {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let mut reflected = r_in.direction().reflect(&rec.normal);
         reflected = reflected.unit_vector() + (self.fuzz * Vec3::random_unit_vector());
-        *scattered = Ray::new(rec.p, reflected);
-        *attenuation = self.albedo;
-        scattered.direction().dot(&rec.normal) > 0.0
+        let scattered = Ray::new(rec.p, reflected);
+        let attenuation = self.albedo;
+        (scattered.direction().dot(&rec.normal) > 0.0).then(|| ScatterRecord {
+            attenuation,
+            scattered,
+        })
     }
 }
 
@@ -80,14 +74,8 @@ pub struct Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
-        *attenuation = Color::new(1.0, 1.0, 1.0);
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let attenuation = Color::new(1.0, 1.0, 1.0);
         let ri = if rec.front_face {
             1.0 / self.refraction_index
         } else {
@@ -105,8 +93,11 @@ impl Material for Dielectric {
             unit_direction.refract(&rec.normal, ri)
         };
 
-        *scattered = Ray::new(rec.p, direction);
-        true
+        let scattered = Ray::new(rec.p, direction);
+        Some(ScatterRecord {
+            attenuation,
+            scattered,
+        })
     }
 }
 
