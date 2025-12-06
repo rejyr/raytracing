@@ -2,7 +2,7 @@ use std::error::Error;
 use std::io::{BufWriter, stdout};
 use std::rc::Rc;
 
-use raytracing::camera::Camera;
+use raytracing::camera::{Camera, CameraConfig};
 use raytracing::color::Color;
 use raytracing::helper::random_f64_in_range;
 use raytracing::hittable_list::HittableList;
@@ -69,19 +69,19 @@ fn main() -> Result<(), Box<dyn Error>> {
         material3,
     )));
 
-    let mut cam = Camera::default();
-    cam.aspect_ratio = 16.0 / 9.0;
-    cam.image_width = 1200;
-    cam.samples_per_pixel = 500;
-    cam.max_depth = 50;
-
-    cam.vfov = 20.0;
-    cam.lookfrom = Point3::new(13.0, 2.0, 3.0);
-    cam.lookat = Point3::new(0.0, 0.0, 0.0);
-    cam.vup = Vec3::new(0.0, 1.0, 0.0);
-
-    cam.defocus_angle = 0.6;
-    cam.focus_dist = 10.0;
+    let cc = CameraConfig {
+        aspect_ratio: 16.0 / 9.0,
+        image_width: 1200,
+        samples_per_pixel: 500,
+        max_depth: 50,
+        vfov: 20.0,
+        lookfrom: Point3::new(13.0, 2.0, 3.0),
+        lookat: Point3::new(0.0, 0.0, 0.0),
+        vup: Vec3::new(0.0, 1.0, 0.0),
+        defocus_angle: 0.6,
+        focus_dist: 10.0,
+    };
+    let cam = Camera::from_config(cc);
 
     let mut out = BufWriter::new(stdout());
     cam.render(&mut out, &world)?;
