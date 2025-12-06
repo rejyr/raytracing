@@ -16,7 +16,7 @@ pub struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
         let oc = self.center - *r.origin();
         let a = r.direction().length_squared();
         let h = r.direction().dot(&oc);
@@ -24,7 +24,7 @@ impl Hittable for Sphere {
 
         let discriminant = h * h - a * c;
         if discriminant < 0.0 {
-            return false;
+            return None;
         }
 
         let sqrtd = discriminant.sqrt();
@@ -34,18 +34,30 @@ impl Hittable for Sphere {
         if root <= ray_t.min || ray_t.max <= root {
             root = (h + sqrtd) / a;
             if root <= ray_t.min || ray_t.max <= root {
-                return false;
+                return None;
             }
         }
 
-        rec.t = root;
-        rec.p = r.at(rec.t);
-        rec.normal = (rec.p - self.center) / self.radius;
-        let outward_normal = (rec.p - self.center) / self.radius;
-        rec.set_face_normal(r, &outward_normal);
-        rec.mat = self.mat.clone();
+        let t = root;
+        let p = r.at(t);
+        let outward_normal = (p - self.center) / self.radius;
+        // TODO: refactor into function with more `Hittable`s?
+        let front_face = r.direction().dot(&outward_normal) < 0.0;
+        let normal = if front_face {
+            outward_normal
+        } else {
+            -outward_normal
+        };
 
-        true
+        let hr = HitRecord {
+            p,
+            normal,
+            mat: self.mat.clone(),
+            t,
+            front_face,
+        };
+
+        Some(hr)
     }
 }
 

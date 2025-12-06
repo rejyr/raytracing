@@ -4,7 +4,7 @@ use std::io::Write;
 use crate::color::write_color;
 use crate::{
     color::Color,
-    hittable::{HitRecord, Hittable},
+    hittable::Hittable,
     interval::Interval,
     ray::Ray,
     vec3::{Point3, Vec3},
@@ -160,9 +160,7 @@ impl Camera {
             return Color::new(0.0, 0.0, 0.0);
         }
 
-        let mut rec = HitRecord::default_with_default_lambertian();
-
-        if world.hit(r, Interval::new(0.001, f64::INFINITY), &mut rec) {
+        if let Some(rec) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
             let mut scattered = Ray::default();
             let mut attenuation = Color::default();
             if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
