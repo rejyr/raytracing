@@ -204,7 +204,7 @@ impl Camera {
 
             if n % w == 0 {
                 let lines_done = lines_done.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
-                if lines_done % 10 == 0 {
+                if lines_done.is_multiple_of(10) {
                     eprintln!("Scanlines left: {}", h - lines_done);
                 }
             }
