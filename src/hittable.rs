@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
+    aabb::AABB,
     interval::Interval,
     material::Material,
     ray::Ray,
@@ -18,4 +19,6 @@ pub struct HitRecord {
 
 pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
+
+    fn bounding_box(&self) -> AABB;
 }

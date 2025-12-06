@@ -1,3 +1,4 @@
+use raytracing::bvh::BVHNode;
 use raytracing::{color, material, sphere, vec3};
 use std::error::Error;
 use std::io::{BufWriter, stdout};
@@ -54,6 +55,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let material3 = material!(Metal(color!(0.7, 0.6, 0.5), 0));
     world.add(sphere!(point3!(4, 1, 0), 1.0, material3));
 
+    let bvh = BVHNode::from_list(world);
+
     let cc = CameraConfig {
         aspect_ratio: 16.0 / 9.0,
         image_width: 400,
@@ -69,7 +72,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cam = Camera::from_config(cc);
 
     let mut out = BufWriter::new(stdout());
-    cam.render(&mut out, &world)?;
+    cam.render(&mut out, &bvh)?;
 
     Ok(())
 }

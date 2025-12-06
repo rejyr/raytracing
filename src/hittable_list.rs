@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
+    aabb::AABB,
     hittable::{HitRecord, Hittable},
     interval::Interval,
     ray::Ray,
@@ -9,6 +10,7 @@ use crate::{
 #[derive(Default)]
 pub struct HittableList {
     pub objects: Vec<Arc<dyn Hittable>>,
+    bbox: AABB,
 }
 
 impl Hittable for HittableList {
@@ -25,6 +27,10 @@ impl Hittable for HittableList {
 
         temp_rec
     }
+
+    fn bounding_box(&self) -> AABB {
+        self.bbox
+    }
 }
 
 impl HittableList {
@@ -33,6 +39,7 @@ impl HittableList {
     }
 
     pub fn add(&mut self, object: Arc<dyn Hittable>) {
+        self.bbox = AABB::from_aabbs(&self.bbox, &object.bounding_box());
         self.objects.push(object);
     }
 
