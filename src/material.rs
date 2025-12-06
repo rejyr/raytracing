@@ -1,4 +1,4 @@
-use crate::{color::Color, hittable::HitRecord, ray::Ray, vec3::Vec3};
+use crate::{color::Color, helper::random_f64, hittable::HitRecord, ray::Ray, vec3::Vec3};
 
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord>;
@@ -100,7 +100,7 @@ impl Material for Dielectric {
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract = ri * sin_theta > 1.0;
-        let direction = if cannot_refract || Self::reflectance(cos_theta, ri) > fastrand::f64() {
+        let direction = if cannot_refract || Self::reflectance(cos_theta, ri) > random_f64() {
             unit_direction.reflect(&rec.normal)
         } else {
             unit_direction.refract(&rec.normal, ri)

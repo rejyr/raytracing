@@ -7,6 +7,7 @@ use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
 use crate::color::write_color;
+use crate::helper::random_f64;
 use crate::{
     color::Color,
     hittable::Hittable,
@@ -179,7 +180,7 @@ impl Camera {
 
     /// Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
     fn sample_square() -> Vec3 {
-        Vec3::new(fastrand::f64() - 0.5, fastrand::f64() - 0.5, 0.0)
+        Vec3::new(random_f64() - 0.5, random_f64() - 0.5, 0.0)
     }
 
     /// Returns a random point in the camera defocus disk.

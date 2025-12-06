@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub},
 };
 
-use crate::helper::random_f64_in_range;
+use crate::helper::{random_f64, random_f64_in_range};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Vec3 {
@@ -114,7 +114,7 @@ impl Vec3 {
     }
 
     pub fn random() -> Self {
-        Vec3::new(fastrand::f64(), fastrand::f64(), fastrand::f64())
+        Vec3::new(random_f64(), random_f64(), random_f64())
     }
 
     pub fn random_in_range(min: f64, max: f64) -> Self {

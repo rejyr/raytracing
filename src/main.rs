@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use raytracing::camera::{Camera, CameraConfig};
 use raytracing::color::Color;
-use raytracing::helper::random_f64_in_range;
+use raytracing::helper::{random_f64, random_f64_in_range};
 use raytracing::hittable_list::HittableList;
 use raytracing::material::Material;
 use raytracing::point3;
@@ -18,11 +18,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for a in -11..11 {
         for b in -11..11 {
-            let choose_mat = fastrand::f64();
+            let choose_mat = random_f64();
             let center = point3!(
-                a as f64 + 0.9 * fastrand::f64(),
+                a as f64 + 0.9 * random_f64(),
                 0.2,
-                b as f64 + 0.9 * fastrand::f64(),
+                b as f64 + 0.9 * random_f64(),
             );
 
             if (center - point3!(4, 0.2, 0)).length() > 0.9 {
