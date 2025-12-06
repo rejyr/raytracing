@@ -64,7 +64,7 @@ impl Hittable for Sphere {
 
 impl Sphere {
     pub fn new(static_center: Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
-        Sphere {
+        Self {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
             radius,
             mat,
@@ -77,7 +77,7 @@ impl Sphere {
         radius: f64,
         mat: Arc<dyn Material>,
     ) -> Self {
-        Sphere {
+        Self {
             center: Ray::new(center1, center2 - center1),
             radius: radius.max(0.0),
             mat,

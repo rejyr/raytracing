@@ -13,7 +13,7 @@ impl Ray {
     }
 
     pub const fn new_with_time(origin: Point3, direction: Vec3, time: f64) -> Self {
-        Ray {
+        Self {
             orig: origin,
             dir: direction,
             time,
