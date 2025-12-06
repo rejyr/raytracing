@@ -6,26 +6,25 @@ pub struct Ray {
     dir: Vec3,
 }
 
-// TODO: upgrade functions to `const`
 impl Ray {
-    pub fn new(origin: Point3, direction: Vec3) -> Self {
+    pub const fn new(origin: Point3, direction: Vec3) -> Self {
         Ray {
             orig: origin,
             dir: direction,
         }
     }
 
-    pub fn origin(&self) -> &Point3 {
+    pub const fn origin(&self) -> &Point3 {
         &self.orig
     }
-    pub fn origin_mut(&mut self) -> &mut Point3 {
+    pub const fn origin_mut(&mut self) -> &mut Point3 {
         &mut self.orig
     }
 
-    pub fn direction(&self) -> &Vec3 {
+    pub const fn direction(&self) -> &Vec3 {
         &self.dir
     }
-    pub fn direction_mut(&mut self) -> &mut Vec3 {
+    pub const fn direction_mut(&mut self) -> &mut Vec3 {
         &mut self.dir
     }
 
