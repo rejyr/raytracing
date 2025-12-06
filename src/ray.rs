@@ -6,6 +6,7 @@ pub struct Ray {
     dir: Vec3,
 }
 
+// TODO: upgrade functions to `const`
 impl Ray {
     pub fn new(origin: Point3, direction: Vec3) -> Self {
         Ray {

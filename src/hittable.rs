@@ -44,5 +44,6 @@ impl HitRecord {
 }
 
 pub trait Hittable {
+    // TODO: refactor to return `Option<HitRecord>`
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
 }

@@ -10,6 +10,7 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
+// TODO: refactor with `CameraConfig`
 #[derive(Debug)]
 pub struct Camera {
     /// Ratio of image width over height
@@ -180,6 +181,8 @@ impl Camera {
         self.center + (p[0] * self.defocus_disk_u) + (p[1] * self.defocus_disk_v)
     }
 
+    // TODO: refactor to use image library
+    // TODO: add parallelism
     pub fn render(&mut self, out: &mut impl Write, world: &dyn Hittable) -> Result<()> {
         self.initialize();
 

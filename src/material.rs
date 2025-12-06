@@ -1,5 +1,6 @@
 use crate::{color::Color, hittable::HitRecord, ray::Ray, vec3::Vec3};
 
+// TODO: refactor to return `ScatterRecord`
 pub trait Material {
     fn scatter(
         &self,

@@ -48,6 +48,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    // TODO: reduce verbosity with macros?
     let material1 = Rc::new(Dielectric::new(1.5));
     world.add(Rc::new(Sphere::new(
         Point3::new(0.0, 1.0, 0.0),

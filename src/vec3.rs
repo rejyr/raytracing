@@ -108,6 +108,7 @@ impl DivAssign<f64> for Vec3 {
     }
 }
 
+// TODO: upgrade functions to `const`
 impl Vec3 {
     pub fn new(e0: f64, e1: f64, e2: f64) -> Self {
         Vec3 { e: [e0, e1, e2] }
