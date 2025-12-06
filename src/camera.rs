@@ -15,7 +15,7 @@ pub struct CameraConfig {
     /// Ratio of image width over height
     pub aspect_ratio: f64,
     /// Rendered image width in pixel cout
-    pub image_width: i32,
+    pub image_width: usize,
     /// Count of random samples for each pixel
     pub samples_per_pixel: i32,
     /// Maximum number of ray bounces into scene
@@ -60,7 +60,7 @@ pub struct Camera {
     config: CameraConfig,
 
     /// Rendered image height
-    image_height: i32,
+    image_height: usize,
     /// Color scale factor to for a sum of pixels
     pixel_samples_scale: f64,
     /// Camera center
@@ -80,7 +80,7 @@ pub struct Camera {
 impl From<CameraConfig> for Camera {
     fn from(cc: CameraConfig) -> Self {
         let image_height = {
-            let image_height = (cc.image_width as f64 / cc.aspect_ratio) as i32;
+            let image_height = (cc.image_width as f64 / cc.aspect_ratio) as usize;
             if image_height < 1 { 1 } else { image_height }
         };
 
@@ -138,7 +138,7 @@ impl Camera {
 
     /// Construct a camera ray originating from the origin and directed at randomly sampled point
     /// around the pixel location i, j.
-    fn get_ray(&self, i: i32, j: i32) -> Ray {
+    fn get_ray(&self, i: usize, j: usize) -> Ray {
         let offset = Self::sample_square();
         let pixel_sample = self.pixel100_loc
             + ((i as f64 + offset.x()) * self.pixel_delta_u)
