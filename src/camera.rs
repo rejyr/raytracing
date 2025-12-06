@@ -1,5 +1,10 @@
 use std::io::Result;
 use std::io::Write;
+use std::sync::atomic::AtomicUsize;
+
+use rayon::iter::IndexedParallelIterator;
+use rayon::iter::IntoParallelRefMutIterator;
+use rayon::iter::ParallelIterator;
 
 use crate::color::write_color;
 use crate::{
@@ -183,28 +188,44 @@ impl Camera {
         self.center + (p[0] * self.defocus_disk_u) + (p[1] * self.defocus_disk_v)
     }
 
-    // TODO: refactor to use image library
-    // TODO: add parallelism
-    pub fn render(&self, out: &mut impl Write, world: &dyn Hittable) -> Result<()> {
-        writeln!(
-            out,
-            "P3\n{} {}\n255",
-            self.config.image_width, self.image_height
-        )?;
+    pub fn render(&self, out: &mut impl Write, world: &impl Hittable) -> Result<()> {
+        let w = self.config.image_width;
+        let h = self.image_height;
+        // i = n % w, j = n / w
+        // n = i + j*w
+        let mut buf = vec![Color::default(); w * h];
 
-        for j in 0..self.image_height {
-            eprintln!("\rScanlines remaining: {} ", self.image_height - j);
-            for i in 0..self.config.image_width {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..self.config.samples_per_pixel {
-                    let r = self.get_ray(i, j);
-                    pixel_color += Self::ray_color(&r, self.config.max_depth, world);
+        let lines_done = AtomicUsize::new(0);
+
+        buf.par_iter_mut().enumerate().for_each(|(n, c)| {
+            let i = n % w;
+            let j = n / w;
+            *c = self.render_pixel(i, j, world);
+
+            if n % w == 0 {
+                let lines_done = lines_done.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+                if lines_done % 10 == 0 {
+                    eprintln!("Scanlines left: {}", h - lines_done);
                 }
-                write_color(out, &(self.pixel_samples_scale * pixel_color))?;
             }
+        });
+
+        writeln!(out, "P3\n{} {}\n255", w, h)?;
+        for c in buf {
+            write_color(out, &c)?;
         }
+
         eprintln!("\rDone.");
 
         Ok(())
+    }
+
+    fn render_pixel(&self, i: usize, j: usize, world: &impl Hittable) -> Color {
+        let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+        for _ in 0..self.config.samples_per_pixel {
+            let r = self.get_ray(i, j);
+            pixel_color += Self::ray_color(&r, self.config.max_depth, world);
+        }
+        self.pixel_samples_scale * pixel_color
     }
 }

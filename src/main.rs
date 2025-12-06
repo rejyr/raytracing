@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::io::{BufWriter, stdout};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use raytracing::camera::{Camera, CameraConfig};
 use raytracing::color::Color;
@@ -13,8 +13,8 @@ use raytracing::vec3::{Point3, Vec3};
 fn main() -> Result<(), Box<dyn Error>> {
     let mut world = HittableList::default();
 
-    let ground_material = Rc::new(Lambertian::new(&Color::new(0.5, 0.5, 0.5)));
-    world.add(Rc::new(Sphere::new(
+    let ground_material = Arc::new(Lambertian::new(&Color::new(0.5, 0.5, 0.5)));
+    world.add(Arc::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
         ground_material,
@@ -30,40 +30,40 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let sphere_material: Rc<dyn Material> = if choose_mat < 0.8 {
+                let sphere_material: Arc<dyn Material> = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    Rc::new(Lambertian::new(&albedo))
+                    Arc::new(Lambertian::new(&albedo))
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_in_range(0.5, 1.0);
                     let fuzz = random_f64_in_range(0.0, 0.5);
-                    Rc::new(Metal::new(&albedo, fuzz))
+                    Arc::new(Metal::new(&albedo, fuzz))
                 } else {
                     // glass
-                    Rc::new(Dielectric::new(1.5))
+                    Arc::new(Dielectric::new(1.5))
                 };
-                world.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
+                world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
             }
         }
     }
 
     // TODO: reduce verbosity with macros?
-    let material1 = Rc::new(Dielectric::new(1.5));
-    world.add(Rc::new(Sphere::new(
+    let material1 = Arc::new(Dielectric::new(1.5));
+    world.add(Arc::new(Sphere::new(
         Point3::new(0.0, 1.0, 0.0),
         1.0,
         material1,
     )));
 
-    let material2 = Rc::new(Lambertian::new(&Color::new(0.4, 0.2, 0.1)));
-    world.add(Rc::new(Sphere::new(
+    let material2 = Arc::new(Lambertian::new(&Color::new(0.4, 0.2, 0.1)));
+    world.add(Arc::new(Sphere::new(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
         material2,
     )));
-    let material3 = Rc::new(Metal::new(&Color::new(0.7, 0.6, 0.5), 0.0));
-    world.add(Rc::new(Sphere::new(
+    let material3 = Arc::new(Metal::new(&Color::new(0.7, 0.6, 0.5), 0.0));
+    world.add(Arc::new(Sphere::new(
         Point3::new(4.0, 1.0, 0.0),
         1.0,
         material3,
