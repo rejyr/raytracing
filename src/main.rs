@@ -1,13 +1,11 @@
 use raytracing::{color, material, sphere, vec3};
 use std::error::Error;
 use std::io::{BufWriter, stdout};
-use std::sync::Arc;
 
 use raytracing::camera::{Camera, CameraConfig};
 use raytracing::color::Color;
 use raytracing::helper::{random_f64, random_f64_in_range};
 use raytracing::hittable_list::HittableList;
-use raytracing::material::Material;
 use raytracing::point3;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -26,20 +24,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
 
             if (center - point3!(4, 0.2, 0)).length() > 0.9 {
-                let sphere_material: Arc<dyn Material> = if choose_mat < 0.8 {
+                if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    material!(Lambertian(albedo))
+                    let center2 = center + vec3!(0, random_f64_in_range(0.0, 0.5), 0);
+                    let sphere_material = material!(Lambertian(albedo));
+                    world.add(sphere!(center, center2, 0.2, sphere_material));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_in_range(0.5, 1.0);
                     let fuzz = random_f64_in_range(0.0, 0.5);
-                    material!(Metal(albedo, fuzz))
+                    let sphere_material = material!(Metal(albedo, fuzz));
+                    world.add(sphere!(center, 0.2, sphere_material));
                 } else {
                     // glass
-                    material!(Dielectric(1.5))
+                    let sphere_material = material!(Dielectric(1.5));
+                    world.add(sphere!(center, 0.2, sphere_material));
                 };
-                world.add(sphere!(center, 0.2, sphere_material));
             }
         }
     }
@@ -55,8 +56,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let cc = CameraConfig {
         aspect_ratio: 16.0 / 9.0,
-        image_width: 1200,
-        samples_per_pixel: 500,
+        image_width: 400,
+        samples_per_pixel: 100,
         max_depth: 50,
         vfov: 20.0,
         lookfrom: point3!(13, 2, 3),

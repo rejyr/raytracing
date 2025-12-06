@@ -5,19 +5,20 @@ use crate::{
     interval::Interval,
     material::Material,
     ray::Ray,
-    vec3::Point3,
+    vec3::{Point3, Vec3},
 };
 
 #[derive(Clone)]
 pub struct Sphere {
-    center: Point3,
+    center: Ray,
     radius: f64,
     mat: Arc<dyn Material>,
 }
 
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
-        let oc = self.center - *r.origin();
+        let current_center = self.center.at(r.time());
+        let oc = current_center - *r.origin();
         let a = r.direction().length_squared();
         let h = r.direction().dot(&oc);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -40,7 +41,7 @@ impl Hittable for Sphere {
 
         let t = root;
         let p = r.at(t);
-        let outward_normal = (p - self.center) / self.radius;
+        let outward_normal = (p - current_center) / self.radius;
         // TODO: refactor into function with more `Hittable`s?
         let front_face = r.direction().dot(&outward_normal) < 0.0;
         let normal = if front_face {
@@ -62,9 +63,22 @@ impl Hittable for Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
+    pub fn new(static_center: Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
         Sphere {
-            center,
+            center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
+            radius,
+            mat,
+        }
+    }
+
+    pub fn new_moving(
+        center1: Point3,
+        center2: Point3,
+        radius: f64,
+        mat: Arc<dyn Material>,
+    ) -> Self {
+        Sphere {
+            center: Ray::new(center1, center2 - center1),
             radius: radius.max(0.0),
             mat,
         }
@@ -75,5 +89,10 @@ impl Sphere {
 macro_rules! sphere {
     ($center:expr, $radius:expr, $mat:expr) => {
         std::sync::Arc::new($crate::sphere::Sphere::new($center, $radius as f64, $mat))
+    };
+    ($center1:expr, $center2:expr, $radius:expr, $mat:expr) => {
+        std::sync::Arc::new($crate::sphere::Sphere::new_moving(
+            $center1, $center2, $radius, $mat,
+        ))
     };
 }

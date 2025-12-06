@@ -29,7 +29,7 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
 
         // Catch degenerate scatter direction
@@ -37,7 +37,7 @@ impl Material for Lambertian {
             scatter_direction = rec.normal;
         }
 
-        let scattered = Ray::new(rec.p, scatter_direction);
+        let scattered = Ray::new_with_time(rec.p, scatter_direction, r_in.time());
         let attenuation = self.albedo;
 
         Some(ScatterRecord {
@@ -63,7 +63,7 @@ impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let mut reflected = r_in.direction().reflect(&rec.normal);
         reflected = reflected.unit_vector() + (self.fuzz * Vec3::random_unit_vector());
-        let scattered = Ray::new(rec.p, reflected);
+        let scattered = Ray::new_with_time(rec.p, reflected, r_in.time());
         let attenuation = self.albedo;
         (scattered.direction().dot(&rec.normal) > 0.0).then_some(ScatterRecord {
             attenuation,
@@ -106,7 +106,7 @@ impl Material for Dielectric {
             unit_direction.refract(&rec.normal, ri)
         };
 
-        let scattered = Ray::new(rec.p, direction);
+        let scattered = Ray::new_with_time(rec.p, direction, r_in.time());
         Some(ScatterRecord {
             attenuation,
             scattered,
