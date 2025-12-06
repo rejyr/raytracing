@@ -207,4 +207,18 @@ impl Vec3 {
     }
 }
 
+#[macro_export]
+macro_rules! vec3 {
+    ($e1:expr, $e2:expr, $e3:expr $(,)?) => {
+        $crate::vec3::Vec3::new($e1 as f64, $e2 as f64, $e3 as f64)
+    };
+}
+
 pub type Point3 = Vec3;
+
+#[macro_export]
+macro_rules! point3 {
+    ($e1:expr, $e2:expr, $e3:expr $(,)?) => {
+        $crate::vec3!($e1, $e2, $e3)
+    };
+}

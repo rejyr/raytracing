@@ -6,6 +6,13 @@ pub type Color = Vec3;
 
 const INTENSITY: Interval = Interval::new(0.000, 0.999);
 
+#[macro_export]
+macro_rules! color {
+    ($e1:expr, $e2:expr, $e3:expr $(,)?) => {
+        $crate::vec3!($e1, $e2, $e3)
+    };
+}
+
 pub fn linear_to_gamma(linear_component: f64) -> f64 {
     if linear_component > 0.0 {
         return linear_component.sqrt();

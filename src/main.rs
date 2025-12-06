@@ -1,3 +1,4 @@
+use raytracing::{color, material, sphere, vec3};
 use std::error::Error;
 use std::io::{BufWriter, stdout};
 use std::sync::Arc;
@@ -6,68 +7,51 @@ use raytracing::camera::{Camera, CameraConfig};
 use raytracing::color::Color;
 use raytracing::helper::random_f64_in_range;
 use raytracing::hittable_list::HittableList;
-use raytracing::material::{Dielectric, Lambertian, Material, Metal};
-use raytracing::sphere::Sphere;
-use raytracing::vec3::{Point3, Vec3};
+use raytracing::material::Material;
+use raytracing::point3;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut world = HittableList::default();
 
-    let ground_material = Arc::new(Lambertian::new(&Color::new(0.5, 0.5, 0.5)));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        ground_material,
-    )));
+    let ground_material = material!(Lambertian(color!(0.5, 0.5, 0.5)));
+    world.add(sphere!(point3!(0, -1000, 0), 1000.0, ground_material));
 
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat = fastrand::f64();
-            let center = Point3::new(
+            let center = point3!(
                 a as f64 + 0.9 * fastrand::f64(),
                 0.2,
                 b as f64 + 0.9 * fastrand::f64(),
             );
 
-            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+            if (center - point3!(4, 0.2, 0)).length() > 0.9 {
                 let sphere_material: Arc<dyn Material> = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    Arc::new(Lambertian::new(&albedo))
+                    material!(Lambertian(albedo))
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_in_range(0.5, 1.0);
                     let fuzz = random_f64_in_range(0.0, 0.5);
-                    Arc::new(Metal::new(&albedo, fuzz))
+                    material!(Metal(albedo, fuzz))
                 } else {
                     // glass
-                    Arc::new(Dielectric::new(1.5))
+                    material!(Dielectric(1.5))
                 };
-                world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                world.add(sphere!(center, 0.2, sphere_material));
             }
         }
     }
 
-    // TODO: reduce verbosity with macros?
-    let material1 = Arc::new(Dielectric::new(1.5));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(0.0, 1.0, 0.0),
-        1.0,
-        material1,
-    )));
+    let material1 = material!(Dielectric(1.5));
+    world.add(sphere!(point3!(0, 1, 0), 1.0, material1));
 
-    let material2 = Arc::new(Lambertian::new(&Color::new(0.4, 0.2, 0.1)));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(-4.0, 1.0, 0.0),
-        1.0,
-        material2,
-    )));
-    let material3 = Arc::new(Metal::new(&Color::new(0.7, 0.6, 0.5), 0.0));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(4.0, 1.0, 0.0),
-        1.0,
-        material3,
-    )));
+    let material2 = material!(Lambertian(color!(0.4, 0.2, 0.1)));
+    world.add(sphere!(point3!(-4, 1, 0), 1.0, material2));
+
+    let material3 = material!(Metal(color!(0.7, 0.6, 0.5), 0));
+    world.add(sphere!(point3!(4, 1, 0), 1.0, material3));
 
     let cc = CameraConfig {
         aspect_ratio: 16.0 / 9.0,
@@ -75,9 +59,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         samples_per_pixel: 500,
         max_depth: 50,
         vfov: 20.0,
-        lookfrom: Point3::new(13.0, 2.0, 3.0),
-        lookat: Point3::new(0.0, 0.0, 0.0),
-        vup: Vec3::new(0.0, 1.0, 0.0),
+        lookfrom: point3!(13, 2, 3),
+        lookat: point3!(0, 0, 0),
+        vup: vec3!(0, 1, 0),
         defocus_angle: 0.6,
         focus_dist: 10.0,
     };

@@ -10,6 +10,19 @@ pub struct ScatterRecord {
     pub scattered: Ray,
 }
 
+#[macro_export]
+macro_rules! material {
+    (Lambertian( $color:expr )) => {
+        std::sync::Arc::new($crate::material::Lambertian::new(&($color)))
+    };
+    (Metal( $albedo:expr, $fuzz:expr )) => {
+        std::sync::Arc::new($crate::material::Metal::new(&($albedo), $fuzz as f64))
+    };
+    (Dielectric( $ri:expr )) => {
+        std::sync::Arc::new($crate::material::Dielectric::new($ri as f64))
+    };
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Lambertian {
     albedo: Color,

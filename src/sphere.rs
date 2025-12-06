@@ -70,3 +70,10 @@ impl Sphere {
         }
     }
 }
+
+#[macro_export]
+macro_rules! sphere {
+    ($center:expr, $radius:expr, $mat:expr) => {
+        std::sync::Arc::new($crate::sphere::Sphere::new($center, $radius as f64, $mat))
+    };
+}
