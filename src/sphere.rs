@@ -52,11 +52,14 @@ impl Hittable for Sphere {
             -outward_normal
         };
 
+        // TODO: calculate u and v
         let hr = HitRecord {
             p,
             normal,
             mat: self.mat.clone(),
             t,
+            u: Default::default(),
+            v: Default::default(),
             front_face,
         };
 

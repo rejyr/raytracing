@@ -1,5 +1,5 @@
 use raytracing::bvh::BVHNode;
-use raytracing::{color, material, sphere, vec3};
+use raytracing::{color, material, sphere, texture, vec3};
 use std::error::Error;
 use std::io::{BufWriter, stdout};
 
@@ -12,8 +12,13 @@ use raytracing::point3;
 fn main() -> Result<(), Box<dyn Error>> {
     let mut world = HittableList::default();
 
-    let ground_material = material!(Lambertian(color!(0.5, 0.5, 0.5)));
-    world.add(sphere!(point3!(0, -1000, 0), 1000.0, ground_material));
+    let checker =
+        texture!(CheckerTexture(0.32, color: color!(0.2,0.3, 0.1), color: color!(0.9, 0.9, 0.90)));
+    world.add(sphere!(
+        point3!(0, -1000, 0),
+        1000.0,
+        material!(Lambertian(checker))
+    ));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -29,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     // diffuse
                     let albedo = Color::random() * Color::random();
                     let center2 = center + vec3!(0, random_f64_in_range(0.0, 0.5), 0);
-                    let sphere_material = material!(Lambertian(albedo));
+                    let sphere_material = material!(Lambertian(color: albedo));
                     world.add(sphere!(center, center2, 0.2, sphere_material));
                 } else if choose_mat < 0.95 {
                     // metal
@@ -49,7 +54,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let material1 = material!(Dielectric(1.5));
     world.add(sphere!(point3!(0, 1, 0), 1.0, material1));
 
-    let material2 = material!(Lambertian(color!(0.4, 0.2, 0.1)));
+    let material2 = material!(Lambertian(color: color!(0.4, 0.2, 0.1)));
     world.add(sphere!(point3!(-4, 1, 0), 1.0, material2));
 
     let material3 = material!(Metal(color!(0.7, 0.6, 0.5), 0));

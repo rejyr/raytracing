@@ -1,4 +1,13 @@
-use crate::{color::Color, helper::random_f64, hittable::HitRecord, ray::Ray, vec3::Vec3};
+use std::sync::Arc;
+
+use crate::{
+    color::Color,
+    helper::random_f64,
+    hittable::HitRecord,
+    ray::Ray,
+    texture::{SolidColor, Texture},
+    vec3::Vec3,
+};
 
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord>;
@@ -12,8 +21,11 @@ pub struct ScatterRecord {
 
 #[macro_export]
 macro_rules! material {
-    (Lambertian( $color:expr )) => {
-        std::sync::Arc::new($crate::material::Lambertian::new(&($color)))
+    (Lambertian( $tex:expr )) => {
+        std::sync::Arc::new($crate::material::Lambertian::new($tex))
+    };
+    (Lambertian( color: $color:expr )) => {
+        std::sync::Arc::new($crate::material::Lambertian::new_from_color(&($color)))
     };
     (Metal( $albedo:expr, $fuzz:expr )) => {
         std::sync::Arc::new($crate::material::Metal::new(&($albedo), $fuzz as f64))
@@ -23,9 +35,9 @@ macro_rules! material {
     };
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone)]
 pub struct Lambertian {
-    albedo: Color,
+    tex: Arc<dyn Texture>,
 }
 
 impl Material for Lambertian {
@@ -38,7 +50,7 @@ impl Material for Lambertian {
         }
 
         let scattered = Ray::new_with_time(rec.p, scatter_direction, r_in.time());
-        let attenuation = self.albedo;
+        let attenuation = self.tex.value(rec.u, rec.v, &rec.p);
 
         Some(ScatterRecord {
             attenuation,
@@ -48,8 +60,12 @@ impl Material for Lambertian {
 }
 
 impl Lambertian {
-    pub fn new(albedo: &Color) -> Self {
-        Self { albedo: *albedo }
+    pub fn new(tex: Arc<dyn Texture>) -> Self {
+        Self { tex }
+    }
+
+    pub fn new_from_color(albedo: &Color) -> Self {
+        Self::new(Arc::new(SolidColor::new(albedo)))
     }
 }
 
