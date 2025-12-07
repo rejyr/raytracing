@@ -147,7 +147,7 @@ fn earth() -> Result<(), Box<dyn Error>> {
 fn perlin_spheres() -> Result<(), Box<dyn Error>> {
     let mut world = HittableList::new();
 
-    let pertext = texture!(NoiseTexture);
+    let pertext = texture!(NoiseTexture(4));
     world.add(sphere!(
         point3!(0, -1000, 0),
         1000,
