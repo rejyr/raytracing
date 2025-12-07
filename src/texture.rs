@@ -1,6 +1,6 @@
-use std::sync::Arc;
+use std::{error::Error, sync::Arc};
 
-use crate::{color::Color, vec3::Point3};
+use crate::{color::Color, image::RTWImage, vec3::Point3};
 
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
@@ -20,6 +20,12 @@ macro_rules! texture {
             &($even_color),
             &($odd_color),
         ))
+    };
+    (ImageTexture( $path:expr )) => {
+        std::sync::Arc::new(
+            $crate::texture::ImageTexture::new($path)
+                .expect(&format!("Cannot open ImageTexture at path: {}", $path)),
+        )
     };
 }
 
@@ -82,5 +88,30 @@ impl CheckerTexture {
             even: Arc::new(SolidColor::new(even)),
             odd: Arc::new(SolidColor::new(odd)),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ImageTexture {
+    image: RTWImage,
+}
+
+impl Texture for ImageTexture {
+    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
+        // Clamp input texture coordinates to [0,1] x [1,0]
+        let u = u.clamp(0.0, 1.0);
+        let v = 1.0 - v.clamp(0.0, 1.0);
+
+        let i = u * self.image.width() as f64;
+        let j = v * self.image.height() as f64;
+
+        self.image.pixel_data(i as u32, j as u32)
+    }
+}
+
+impl ImageTexture {
+    pub fn new(path: &str) -> Result<Self, Box<dyn Error>> {
+        let image = RTWImage::load(path)?;
+        Ok(Self { image })
     }
 }

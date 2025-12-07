@@ -119,10 +119,36 @@ fn checkered_spheres() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn earth() -> Result<(), Box<dyn Error>> {
+    let earth_texture = texture!(ImageTexture("textures/earthmap.jpg"));
+    let earth_surface = material!(Lambertian(earth_texture));
+    let globe = sphere!(point3!(0, 0, 0), 2, earth_surface);
+
+    let cc = CameraConfig {
+        aspect_ratio: 16.0 / 9.0,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+        vfov: 20.0,
+        lookfrom: point3!(0, 0, 12),
+        lookat: point3!(0, 0, 0),
+        vup: vec3!(0, 1, 0),
+        defocus_angle: 0.0,
+        ..Default::default()
+    };
+    let cam = Camera::from_config(cc);
+
+    let mut out = BufWriter::new(stdout());
+    cam.render(&mut out, globe.as_ref())?;
+
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
-    match 2 {
+    match 3 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
+        3 => earth(),
         _ => unimplemented!(),
     }
 }
