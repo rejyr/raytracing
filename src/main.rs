@@ -9,7 +9,7 @@ use raytracing::helper::{random_f64, random_f64_in_range};
 use raytracing::hittable_list::HittableList;
 use raytracing::point3;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn bouncing_spheres() -> Result<(), Box<dyn Error>> {
     let mut world = HittableList::default();
 
     let checker =
@@ -80,4 +80,49 @@ fn main() -> Result<(), Box<dyn Error>> {
     cam.render(&mut out, &bvh)?;
 
     Ok(())
+}
+
+fn checkered_spheres() -> Result<(), Box<dyn Error>> {
+    let mut world = HittableList::default();
+
+    let checker =
+        texture!(CheckerTexture(0.32, color: color!(0.2,0.3, 0.1), color: color!(0.9, 0.9, 0.90)));
+
+    world.add(sphere!(
+        point3!(0, -10, 0),
+        10,
+        material!(Lambertian(checker.clone()))
+    ));
+    world.add(sphere!(
+        point3!(0, 10, 0),
+        10,
+        material!(Lambertian(checker))
+    ));
+
+    let cc = CameraConfig {
+        aspect_ratio: 16.0 / 9.0,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+        vfov: 20.0,
+        lookfrom: point3!(13, 2, 3),
+        lookat: point3!(0, 0, 0),
+        vup: vec3!(0, 1, 0),
+        defocus_angle: 0.0,
+        ..Default::default()
+    };
+    let cam = Camera::from_config(cc);
+
+    let mut out = BufWriter::new(stdout());
+    cam.render(&mut out, &world)?;
+
+    Ok(())
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    match 2 {
+        1 => bouncing_spheres(),
+        2 => checkered_spheres(),
+        _ => unimplemented!(),
+    }
 }
