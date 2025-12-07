@@ -1,6 +1,6 @@
 use std::{error::Error, sync::Arc};
 
-use crate::{color::Color, image::RTWImage, vec3::Point3};
+use crate::{color::Color, image::RTWImage, perlin::Perlin, vec3::Point3};
 
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
@@ -26,6 +26,9 @@ macro_rules! texture {
             $crate::texture::ImageTexture::new($path)
                 .expect(&format!("Cannot open ImageTexture at path: {}", $path)),
         )
+    };
+    (NoiseTexture) => {
+        std::sync::Arc::new($crate::texture::NoiseTexture::new())
     };
 }
 
@@ -113,5 +116,24 @@ impl ImageTexture {
     pub fn new(path: &str) -> Result<Self, Box<dyn Error>> {
         let image = RTWImage::load(path)?;
         Ok(Self { image })
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct NoiseTexture {
+    noise: Perlin,
+}
+
+impl Texture for NoiseTexture {
+    fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
+        Color::new(1.0, 1.0, 1.0) * self.noise.noise(p)
+    }
+}
+
+impl NoiseTexture {
+    pub fn new() -> Self {
+        Self {
+            noise: Perlin::new(),
+        }
     }
 }

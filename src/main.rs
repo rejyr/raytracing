@@ -144,11 +144,42 @@ fn earth() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn perlin_spheres() -> Result<(), Box<dyn Error>> {
+    let mut world = HittableList::new();
+
+    let pertext = texture!(NoiseTexture);
+    world.add(sphere!(
+        point3!(0, -1000, 0),
+        1000,
+        material!(Lambertian(pertext.clone()))
+    ));
+    world.add(sphere!(point3!(0, 2, 0), 2, material!(Lambertian(pertext))));
+
+    let cc = CameraConfig {
+        aspect_ratio: 16.0 / 9.0,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+        vfov: 20.0,
+        lookfrom: point3!(13, 2, 3),
+        lookat: point3!(0, 0, 0),
+        vup: vec3!(0, 1, 0),
+        defocus_angle: 0.0,
+        ..Default::default()
+    };
+    let cam = Camera::from_config(cc);
+
+    let mut out = BufWriter::new(stdout());
+    cam.render(&mut out, &world)?;
+
+    Ok(())
+}
 fn main() -> Result<(), Box<dyn Error>> {
-    match 3 {
+    match 4 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
+        4 => perlin_spheres(),
         _ => unimplemented!(),
     }
 }

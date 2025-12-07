@@ -8,6 +8,7 @@ pub mod hittable_list;
 pub mod image;
 pub mod interval;
 pub mod material;
+pub mod perlin;
 pub mod ray;
 pub mod sphere;
 pub mod texture;
