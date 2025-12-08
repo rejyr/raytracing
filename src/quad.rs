@@ -14,6 +14,7 @@ pub struct Quad {
     q: Point3,
     u: Vec3,
     v: Vec3,
+    w: Vec3,
     normal: Vec3,
     d: f64,
     mat: Arc<dyn Material>,
@@ -35,14 +36,14 @@ impl Hittable for Quad {
             return None;
         }
 
-        Some(HitRecord::new(
-            t,
-            r,
-            &self.normal,
-            Default::default(), // TODO: calculate quad u and v
-            Default::default(),
-            self.mat.clone(),
-        ))
+        // Determine if the hit point lies within the planar shape using its plane coordinates.
+        let intersection = r.at(t);
+        let planar_hitpt_vector = intersection - self.q;
+        let alpha = self.w.dot(&planar_hitpt_vector.cross(&self.v));
+        let beta = self.w.dot(&self.u.cross(&planar_hitpt_vector));
+
+        Self::is_interior(alpha, beta)
+            .map(|(u, v)| HitRecord::new(t, r, &self.normal, u, v, self.mat.clone()))
     }
 
     fn bounding_box(&self) -> AABB {
@@ -52,13 +53,16 @@ impl Hittable for Quad {
 
 impl Quad {
     pub fn new(q: &Point3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
-        let normal = u.cross(v).unit_vector();
+        let n = u.cross(v);
+        let normal = n.unit_vector();
         let d = normal.dot(q);
+        let w = n / n.dot(&n);
 
         Self {
             q: *q,
             u: *u,
             v: *v,
+            w,
             normal,
             d,
             mat,
@@ -72,4 +76,19 @@ impl Quad {
         let bbox_diagonal2 = AABB::from_points(&(*q + *u), &(*q + *v));
         AABB::from_aabbs(&bbox_diagonal1, &bbox_diagonal2)
     }
+
+    /// Given the hit point in plane coordinates, return None if it is outside primitive, otherwise
+    /// return Some<(u, v)>
+    fn is_interior(a: f64, b: f64) -> Option<(f64, f64)> {
+        let unit_interval = Interval::new(0.0, 1.0);
+
+        (unit_interval.contains(a) && unit_interval.contains(b)).then_some((a, b))
+    }
+}
+
+#[macro_export]
+macro_rules! quad {
+    ($q:expr, $u:expr, $v:expr, $mat:expr) => {
+        std::sync::Arc::new($crate::quad::Quad::new(&($q), &($u), &($v), $mat))
+    };
 }

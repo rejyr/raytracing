@@ -1,5 +1,5 @@
 use raytracing::bvh::BVHNode;
-use raytracing::{color, material, sphere, texture, vec3};
+use raytracing::{color, material, quad, sphere, texture, vec3};
 use std::error::Error;
 use std::io::{BufWriter, stdout};
 
@@ -174,12 +174,74 @@ fn perlin_spheres() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+fn quads() -> Result<(), Box<dyn Error>> {
+    let mut world = HittableList::new();
+
+    let left_red = material!(Lambertian(color: color!(1, 0.2, 0.2)));
+    let back_green = material!(Lambertian(color: color!(0.2, 1, 0.2)));
+    let right_blue = material!(Lambertian(color: color!(0.2, 0.2, 1)));
+    let upper_orange = material!(Lambertian(color: color!(1, 0.5, 0)));
+    let lower_teal = material!(Lambertian(color: color!(0.2, 0.8, 0.8)));
+
+    world.add(quad!(
+        point3!(-3, -2, 5),
+        vec3!(0, 0, -4),
+        vec3!(0, 4, 0),
+        left_red
+    ));
+    world.add(quad!(
+        point3!(-2, -2, 0),
+        vec3!(4, 0, 0),
+        vec3!(0, 4, 0),
+        back_green
+    ));
+    world.add(quad!(
+        point3!(3, -2, 1),
+        vec3!(0, 0, 4),
+        vec3!(0, 4, 0),
+        right_blue
+    ));
+    world.add(quad!(
+        point3!(-2, 3, 1),
+        vec3!(4, 0, 0),
+        vec3!(0, 0, 4),
+        upper_orange
+    ));
+    world.add(quad!(
+        point3!(-2, -3, 5),
+        vec3!(4, 0, 0),
+        vec3!(0, 0, -4),
+        lower_teal
+    ));
+
+    let cc = CameraConfig {
+        aspect_ratio: 1.0,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+        vfov: 80.0,
+        lookfrom: point3!(0, 0, 9),
+        lookat: point3!(0, 0, 0),
+        vup: vec3!(0, 1, 0),
+        defocus_angle: 0.0,
+        ..Default::default()
+    };
+    let cam = Camera::from_config(cc);
+
+    let mut out = BufWriter::new(stdout());
+    cam.render(&mut out, &world)?;
+
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
-    match 4 {
+    match 5 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
+        5 => quads(),
         _ => unimplemented!(),
     }
 }
