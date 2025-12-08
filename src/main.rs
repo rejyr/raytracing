@@ -92,7 +92,7 @@ fn checkered_spheres() -> Result<(), Box<dyn Error>> {
     world.add(sphere!(
         point3!(0, -10, 0),
         10,
-        material!(Lambertian(checker.clone()))
+        material!(Lambertian(checker))
     ));
     world.add(sphere!(
         point3!(0, 10, 0),
@@ -243,12 +243,12 @@ fn simple_light() -> Result<(), Box<dyn Error>> {
     world.add(sphere!(
         point3!(0, -1000, 0),
         1000,
-        material!(Lambertian(pertext.clone()))
+        material!(Lambertian(pertext))
     ));
     world.add(sphere!(point3!(0, 2, 0), 2, material!(Lambertian(pertext))));
 
     let difflight = material!(DiffuseLight(color: color!(4, 4, 4)));
-    world.add(sphere!(point3!(0, 7, 0), 2, difflight.clone()));
+    world.add(sphere!(point3!(0, 7, 0), 2, difflight));
     world.add(quad!(
         point3!(3, 1, -2),
         vec3!(2, 0, 0),
@@ -307,13 +307,13 @@ fn cornell_box() -> Result<(), Box<dyn Error>> {
         point3!(0, 0, 0),
         vec3!(555, 0, 0),
         vec3!(0, 0, 555),
-        white.clone()
+        white
     ));
     world.add(quad!(
         point3!(555, 555, 555),
         vec3!(-555, 0, 0),
         vec3!(0, 0, -555),
-        white.clone()
+        white
     ));
     world.add(quad!(
         point3!(0, 0, 555),

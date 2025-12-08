@@ -105,11 +105,18 @@ impl Sphere {
 #[macro_export]
 macro_rules! sphere {
     ($center:expr, $radius:expr, $mat:expr) => {
-        std::sync::Arc::new($crate::sphere::Sphere::new($center, $radius as f64, $mat))
+        std::sync::Arc::new($crate::sphere::Sphere::new(
+            $center,
+            $radius as f64,
+            $mat.clone(),
+        ))
     };
     ($center1:expr, $center2:expr, $radius:expr, $mat:expr) => {
         std::sync::Arc::new($crate::sphere::Sphere::new_moving(
-            $center1, $center2, $radius, $mat,
+            $center1,
+            $center2,
+            $radius,
+            $mat.clone(),
         ))
     };
 }

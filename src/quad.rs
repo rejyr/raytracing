@@ -89,6 +89,6 @@ impl Quad {
 #[macro_export]
 macro_rules! quad {
     ($q:expr, $u:expr, $v:expr, $mat:expr) => {
-        std::sync::Arc::new($crate::quad::Quad::new(&($q), &($u), &($v), $mat))
+        std::sync::Arc::new($crate::quad::Quad::new(&($q), &($u), &($v), $mat.clone()))
     };
 }

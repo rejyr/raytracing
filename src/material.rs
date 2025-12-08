@@ -26,7 +26,7 @@ pub struct ScatterRecord {
 #[macro_export]
 macro_rules! material {
     (Lambertian( $tex:expr )) => {
-        std::sync::Arc::new($crate::material::Lambertian::new($tex))
+        std::sync::Arc::new($crate::material::Lambertian::new($tex.clone()))
     };
     (Lambertian( color: $color:expr )) => {
         std::sync::Arc::new($crate::material::Lambertian::new_from_color(&($color)))
@@ -38,7 +38,7 @@ macro_rules! material {
         std::sync::Arc::new($crate::material::Dielectric::new($ri as f64))
     };
     (DiffuseLight( $tex:expr )) => {
-        std::sync::Arc::new($crate::material::DiffuseLight::new($tex))
+        std::sync::Arc::new($crate::material::DiffuseLight::new($tex.clone()))
     };
     (DiffuseLight( color: $color:expr )) => {
         std::sync::Arc::new($crate::material::DiffuseLight::new_from_color(&($color)))
