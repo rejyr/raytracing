@@ -73,6 +73,7 @@ fn bouncing_spheres() -> Result<(), Box<dyn Error>> {
         vup: vec3!(0, 1, 0),
         defocus_angle: 0.6,
         focus_dist: 10.0,
+        ..Default::default()
     };
     let cam = Camera::from_config(cc);
 

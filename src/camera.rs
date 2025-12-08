@@ -40,6 +40,9 @@ pub struct CameraConfig {
     pub defocus_angle: f64,
     /// Distance from the camera lookfrom point to plane of perfect focus
     pub focus_dist: f64,
+
+    /// Scene background color
+    pub background: Color,
 }
 
 impl Default for CameraConfig {
@@ -57,6 +60,8 @@ impl Default for CameraConfig {
 
             defocus_angle: 0.0,
             focus_dist: 10.0,
+
+            background: Color::new(0.70, 0.80, 1.0),
         }
     }
 }
@@ -161,22 +166,25 @@ impl Camera {
         Ray::new_with_time(ray_origin, ray_direction, ray_time)
     }
 
-    fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+    fn ray_color(&self, r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
 
-        if let Some(rec) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
-            if let Some(sr) = rec.mat.scatter(r, &rec) {
-                return sr.attenuation * Self::ray_color(&sr.scattered, depth - 1, world);
-            }
-            return Color::new(0.0, 0.0, 0.0);
-        }
+        let Some(rec) = world.hit(r, Interval::new(0.001, f64::INFINITY)) else {
+            return self.config.background;
+        };
 
-        let unit_direction = r.direction().unit_vector();
-        let a = 0.5 * (unit_direction.y() + 1.0);
-        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.p);
+
+        let Some(sr) = rec.mat.scatter(r, &rec) else {
+            return color_from_emission;
+        };
+
+        let color_from_scatter = sr.attenuation * self.ray_color(&sr.scattered, depth - 1, world);
+
+        color_from_emission + color_from_scatter
     }
 
     /// Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
@@ -226,7 +234,7 @@ impl Camera {
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         for _ in 0..self.config.samples_per_pixel {
             let r = self.get_ray(i, j);
-            pixel_color += Self::ray_color(&r, self.config.max_depth, world);
+            pixel_color += self.ray_color(&r, self.config.max_depth, world);
         }
         self.pixel_samples_scale * pixel_color
     }
