@@ -51,7 +51,7 @@ fn bouncing_spheres() -> Result<(), Box<dyn Error>> {
                     // glass
                     let sphere_material = material!(Dielectric(1.5));
                     world.add(sphere!(center, 0.2, sphere_material));
-                };
+                }
             }
         }
     }

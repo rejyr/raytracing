@@ -220,7 +220,7 @@ impl Camera {
             }
         });
 
-        writeln!(out, "P3\n{} {}\n255", w, h)?;
+        writeln!(out, "P3\n{w} {h}\n255")?;
         for c in buf {
             write_color(out, &c)?;
         }

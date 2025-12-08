@@ -41,12 +41,15 @@ impl Perlin {
         let k = p.z().floor() as i32;
         let mut c = [[[Vec3::default(); 2]; 2]; 2];
 
-        for di in 0..2 {
-            for dj in 0..2 {
-                for dk in 0..2 {
-                    c[di][dj][dk] = self.randvec[self.perm_x[((i + di as i32) & 255) as usize]
-                        ^ self.perm_y[((j + dj as i32) & 255) as usize]
-                        ^ self.perm_z[((k + dk as i32) & 255) as usize]]
+        for (di, ci) in c.iter_mut().enumerate() {
+            for (dj, cij) in ci.iter_mut().enumerate() {
+                for (dk, cijk) in cij.iter_mut().enumerate() {
+                    let di = di as i32;
+                    let dj = dj as i32;
+                    let dk = dk as i32;
+                    *cijk = self.randvec[self.perm_x[((i + di) & 255) as usize]
+                        ^ self.perm_y[((j + dj) & 255) as usize]
+                        ^ self.perm_z[((k + dk) & 255) as usize]]
                 }
             }
         }
@@ -87,17 +90,17 @@ impl Perlin {
         let ww = w * w * (3.0 - 2.0 * w);
 
         let mut accum = 0.0;
-        for i in 0..2 {
-            for j in 0..2 {
-                for k in 0..2 {
-                    let fi = i as f64;
-                    let fj = j as f64;
-                    let fk = k as f64;
-                    let weight_v = Vec3::new(u - fi, v - fj, w - fk);
-                    accum += (fi * uu + (1.0 - fi) * (1.0 - uu))
-                        * (fj * vv + (1.0 - fj) * (1.0 - vv))
-                        * (fk * ww + (1.0 - fk) * (1.0 - ww))
-                        * c[i][j][k].dot(&weight_v);
+        for (i, ci) in c.iter().enumerate() {
+            for (j, cij) in ci.iter().enumerate() {
+                for (k, cijk) in cij.iter().enumerate() {
+                    let i = i as f64;
+                    let f = j as f64;
+                    let k = k as f64;
+                    let weight_v = Vec3::new(u - i, v - f, w - k);
+                    accum += (i * uu + (1.0 - i) * (1.0 - uu))
+                        * (f * vv + (1.0 - f) * (1.0 - vv))
+                        * (k * ww + (1.0 - k) * (1.0 - ww))
+                        * cijk.dot(&weight_v);
                 }
             }
         }

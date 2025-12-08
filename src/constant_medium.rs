@@ -23,15 +23,10 @@ impl Hittable for ConstantMedium {
         r: &crate::ray::Ray,
         ray_t: crate::interval::Interval,
     ) -> Option<crate::hittable::HitRecord> {
-        let Some(mut rec1) = self.boundary.hit(r, Interval::UNIVERSE) else {
-            return None;
-        };
-        let Some(mut rec2) = self
+        let mut rec1 = self.boundary.hit(r, Interval::UNIVERSE)?;
+        let mut rec2 = self
             .boundary
-            .hit(r, Interval::new(rec1.t + 0.0001, f64::INFINITY))
-        else {
-            return None;
-        };
+            .hit(r, Interval::new(rec1.t + 0.0001, f64::INFINITY))?;
 
         rec1.t = rec1.t.max(ray_t.min);
         rec2.t = rec2.t.min(ray_t.max);

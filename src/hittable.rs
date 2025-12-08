@@ -101,9 +101,7 @@ impl Hittable for RotateY {
         let rotated_r = Ray::new_with_time(origin, direction, r.time());
 
         // Determine whether an intersection exists in object space (and if so, where).
-        let Some(mut rec) = self.object.hit(&rotated_r, ray_t) else {
-            return None;
-        };
+        let mut rec = self.object.hit(&rotated_r, ray_t)?;
 
         // Transform the intersection from object space back to world space.
         rec.p = Self::rotate_y(rec.p, self.sin_theta, self.cos_theta);
