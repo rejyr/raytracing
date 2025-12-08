@@ -236,13 +236,55 @@ fn quads() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn simple_light() -> Result<(), Box<dyn Error>> {
+    let mut world = HittableList::new();
+
+    let pertext = texture!(NoiseTexture(4));
+    world.add(sphere!(
+        point3!(0, -1000, 0),
+        1000,
+        material!(Lambertian(pertext.clone()))
+    ));
+    world.add(sphere!(point3!(0, 2, 0), 2, material!(Lambertian(pertext))));
+
+    let difflight = material!(DiffuseLight(color: color!(4, 4, 4)));
+    world.add(sphere!(point3!(0, 7, 0), 2, difflight.clone()));
+    world.add(quad!(
+        point3!(3, 1, -2),
+        vec3!(2, 0, 0),
+        vec3!(0, 2, 0),
+        difflight
+    ));
+
+    let cc = CameraConfig {
+        aspect_ratio: 16.0 / 9.0,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+        vfov: 20.0,
+        lookfrom: point3!(26, 3, 6),
+        lookat: point3!(0, 2, 0),
+        vup: vec3!(0, 1, 0),
+        defocus_angle: 0.0,
+        background: color!(0, 0, 0),
+        ..Default::default()
+    };
+    let cam = Camera::from_config(cc);
+
+    let mut out = BufWriter::new(stdout());
+    cam.render(&mut out, &world)?;
+
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
-    match 5 {
+    match 6 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
         5 => quads(),
+        6 => simple_light(),
         _ => unimplemented!(),
     }
 }

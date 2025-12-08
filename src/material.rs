@@ -37,6 +37,12 @@ macro_rules! material {
     (Dielectric( $ri:expr )) => {
         std::sync::Arc::new($crate::material::Dielectric::new($ri as f64))
     };
+    (DiffuseLight( $tex:expr )) => {
+        std::sync::Arc::new($crate::material::DiffuseLight::new($tex))
+    };
+    (DiffuseLight( color: $color:expr )) => {
+        std::sync::Arc::new($crate::material::DiffuseLight::new_from_color(&($color)))
+    };
 }
 
 #[derive(Clone)]
