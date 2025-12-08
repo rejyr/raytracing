@@ -277,14 +277,80 @@ fn simple_light() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn cornell_box() -> Result<(), Box<dyn Error>> {
+    let mut world = HittableList::new();
+
+    let red = material!(Lambertian(color: color!(0.65, 0.05, 0.05)));
+    let white = material!(Lambertian(color: color!(0.73,0.73,0.73)));
+    let green = material!(Lambertian(color: color!(0.12,0.45,0.15)));
+    let light = material!(DiffuseLight(color: color!(15,15,15)));
+
+    world.add(quad!(
+        point3!(550, 0, 0),
+        vec3!(0, 555, 0),
+        vec3!(0, 0, 555),
+        green
+    ));
+    world.add(quad!(
+        point3!(0, 0, 0),
+        vec3!(0, 555, 0),
+        vec3!(0, 0, 555),
+        red
+    ));
+    world.add(quad!(
+        point3!(343, 554, 332),
+        vec3!(-130, 0, 0),
+        vec3!(0, 0, -105),
+        light
+    ));
+    world.add(quad!(
+        point3!(0, 0, 0),
+        vec3!(555, 0, 0),
+        vec3!(0, 0, 555),
+        white.clone()
+    ));
+    world.add(quad!(
+        point3!(555, 555, 555),
+        vec3!(-555, 0, 0),
+        vec3!(0, 0, -555),
+        white.clone()
+    ));
+    world.add(quad!(
+        point3!(0, 0, 555),
+        vec3!(555, 0, 0),
+        vec3!(0, 555, 0),
+        white
+    ));
+
+    let cc = CameraConfig {
+        aspect_ratio: 1.0,
+        image_width: 600,
+        samples_per_pixel: 200,
+        max_depth: 50,
+        vfov: 40.0,
+        lookfrom: point3!(278, 278, -800),
+        lookat: point3!(278, 278, 0),
+        vup: vec3!(0, 1, 0),
+        defocus_angle: 0.0,
+        background: color!(0, 0, 0),
+        ..Default::default()
+    };
+    let cam = Camera::from_config(cc);
+
+    let mut out = BufWriter::new(stdout());
+    cam.render(&mut out, &world)?;
+
+    Ok(())
+}
 fn main() -> Result<(), Box<dyn Error>> {
-    match 6 {
+    match 7 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
         5 => quads(),
         6 => simple_light(),
+        7 => cornell_box(),
         _ => unimplemented!(),
     }
 }
