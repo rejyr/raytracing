@@ -6,11 +6,15 @@ use crate::{
     hittable::HitRecord,
     ray::Ray,
     texture::{SolidColor, Texture},
-    vec3::Vec3,
+    vec3::{Point3, Vec3},
 };
 
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord>;
+
+    fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+        Color::new(0.0, 0.0, 0.0)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -140,5 +144,30 @@ impl Dielectric {
         let r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
         let r0 = r0 * r0;
         r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
+}
+
+#[derive(Clone)]
+pub struct DiffuseLight {
+    tex: Arc<dyn Texture>,
+}
+
+impl Material for DiffuseLight {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<ScatterRecord> {
+        None
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+        self.tex.value(u, v, p)
+    }
+}
+
+impl DiffuseLight {
+    pub fn new(tex: Arc<dyn Texture>) -> Self {
+        Self { tex }
+    }
+
+    pub fn new_from_color(emit: &Color) -> Self {
+        Self::new(Arc::new(SolidColor::new(emit)))
     }
 }
