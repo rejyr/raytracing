@@ -56,9 +56,9 @@ impl Hittable for Translate {
         let offset_r = Ray::new_with_time(*r.origin() - self.offset, *r.direction(), r.time());
 
         // Determine whether an intersection exists along the offset ray (and if so, where)
-        self.object.hit(&offset_r, ray_t).map(|mut hr| {
-            hr.p += self.offset;
-            hr
+        self.object.hit(&offset_r, ray_t).map(|mut rec| {
+            rec.p += self.offset;
+            rec
         })
     }
 
@@ -110,23 +110,23 @@ impl Hittable for RotateY {
         let rotated_r = Ray::new_with_time(origin, direction, r.time());
 
         // Determine whether an intersection exists in object space (and if so, where).
-        let Some(mut hr) = self.object.hit(&rotated_r, ray_t) else {
+        let Some(mut rec) = self.object.hit(&rotated_r, ray_t) else {
             return None;
         };
 
         // Transform the intersection from object space back to world space.
-        hr.p = Point3::new(
-            (self.cos_theta * hr.p.x()) + (self.sin_theta * hr.p.z()),
-            hr.p.y(),
-            (-self.sin_theta * hr.p.x()) + (self.cos_theta * hr.p.z()),
+        rec.p = Point3::new(
+            (self.cos_theta * rec.p.x()) + (self.sin_theta * rec.p.z()),
+            rec.p.y(),
+            (-self.sin_theta * rec.p.x()) + (self.cos_theta * rec.p.z()),
         );
-        hr.normal = Point3::new(
-            (self.cos_theta * hr.normal.x()) + (self.sin_theta * hr.normal.z()),
-            hr.normal.y(),
-            (-self.sin_theta * hr.normal.x()) + (self.cos_theta * hr.normal.z()),
+        rec.normal = Point3::new(
+            (self.cos_theta * rec.normal.x()) + (self.sin_theta * rec.normal.z()),
+            rec.normal.y(),
+            (-self.sin_theta * rec.normal.x()) + (self.cos_theta * rec.normal.z()),
         );
 
-        Some(hr)
+        Some(rec)
     }
 
     fn bounding_box(&self) -> AABB {

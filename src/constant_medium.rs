@@ -23,34 +23,34 @@ impl Hittable for ConstantMedium {
         r: &crate::ray::Ray,
         ray_t: crate::interval::Interval,
     ) -> Option<crate::hittable::HitRecord> {
-        let Some(mut hr1) = self.boundary.hit(r, Interval::UNIVERSE) else {
+        let Some(mut rec1) = self.boundary.hit(r, Interval::UNIVERSE) else {
             return None;
         };
-        let Some(mut hr2) = self
+        let Some(mut rec2) = self
             .boundary
-            .hit(r, Interval::new(hr1.t + 0.0001, f64::INFINITY))
+            .hit(r, Interval::new(rec1.t + 0.0001, f64::INFINITY))
         else {
             return None;
         };
 
-        hr1.t = hr1.t.max(ray_t.min);
-        hr2.t = hr2.t.min(ray_t.max);
+        rec1.t = rec1.t.max(ray_t.min);
+        rec2.t = rec2.t.min(ray_t.max);
 
-        if hr1.t >= hr2.t {
+        if rec1.t >= rec2.t {
             return None;
         }
 
-        hr1.t = hr1.t.max(0.0);
+        rec1.t = rec1.t.max(0.0);
 
         let ray_length = r.direction().length();
-        let distance_inside_boundary = (hr2.t - hr1.t) * ray_length;
+        let distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
         let hit_distance = self.neg_inv_density * random_f64().ln();
 
         if hit_distance > distance_inside_boundary {
             return None;
         }
 
-        let t = hr1.t + hit_distance / ray_length;
+        let t = rec1.t + hit_distance / ray_length;
         let p = r.at(t);
 
         let normal = Vec3::new(1.0, 0.0, 0.0); // arbitrary
