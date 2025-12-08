@@ -95,17 +95,8 @@ pub struct RotateY {
 impl Hittable for RotateY {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord> {
         // Transform the ray from world space to object space.
-        let origin = Point3::new(
-            (self.cos_theta * r.origin().x()) - (self.sin_theta * r.origin().z()),
-            r.origin().y(),
-            (self.sin_theta * r.origin().x()) + (self.cos_theta * r.origin().z()),
-        );
-
-        let direction = Point3::new(
-            (self.cos_theta * r.direction().x()) - (self.sin_theta * r.direction().z()),
-            r.direction().y(),
-            (self.sin_theta * r.direction().x()) + (self.cos_theta * r.direction().z()),
-        );
+        let origin = Self::anti_rotate_y(*r.origin(), self.sin_theta, self.cos_theta);
+        let direction = Self::anti_rotate_y(*r.direction(), self.sin_theta, self.cos_theta);
 
         let rotated_r = Ray::new_with_time(origin, direction, r.time());
 
@@ -115,16 +106,8 @@ impl Hittable for RotateY {
         };
 
         // Transform the intersection from object space back to world space.
-        rec.p = Point3::new(
-            (self.cos_theta * rec.p.x()) + (self.sin_theta * rec.p.z()),
-            rec.p.y(),
-            (-self.sin_theta * rec.p.x()) + (self.cos_theta * rec.p.z()),
-        );
-        rec.normal = Point3::new(
-            (self.cos_theta * rec.normal.x()) + (self.sin_theta * rec.normal.z()),
-            rec.normal.y(),
-            (-self.sin_theta * rec.normal.x()) + (self.cos_theta * rec.normal.z()),
-        );
+        rec.p = Self::rotate_y(rec.p, self.sin_theta, self.cos_theta);
+        rec.normal = Self::rotate_y(rec.normal, self.sin_theta, self.cos_theta);
 
         Some(rec)
     }
@@ -155,10 +138,7 @@ impl RotateY {
                     let y = j * bbox.y.max + (1.0 - j) * bbox.y.min;
                     let z = k * bbox.z.max + (1.0 - k) * bbox.z.min;
 
-                    let newx = cos_theta * x + sin_theta * z;
-                    let newz = -sin_theta * x + cos_theta * z;
-
-                    let tester = Vec3::new(newx, y, newz);
+                    let tester = Self::rotate_y(Vec3::new(x, y, z), sin_theta, cos_theta);
 
                     for c in 0..3 {
                         min[c] = min[c].min(tester[c]);
@@ -176,6 +156,22 @@ impl RotateY {
             cos_theta,
             bbox,
         }
+    }
+
+    fn rotate_y(p: Point3, sin_theta: f64, cos_theta: f64) -> Point3 {
+        Point3::new(
+            (cos_theta * p.x()) + (sin_theta * p.z()),
+            p.y(),
+            (-sin_theta * p.x()) + (cos_theta * p.z()),
+        )
+    }
+
+    fn anti_rotate_y(p: Point3, sin_theta: f64, cos_theta: f64) -> Point3 {
+        Point3::new(
+            (cos_theta * p.x()) - (sin_theta * p.z()),
+            p.y(),
+            (sin_theta * p.x()) + (cos_theta * p.z()),
+        )
     }
 }
 
