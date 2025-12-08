@@ -115,7 +115,7 @@ macro_rules! sphere {
         std::sync::Arc::new($crate::sphere::Sphere::new_moving(
             $center1,
             $center2,
-            $radius,
+            $radius as f64,
             $mat.clone(),
         ))
     };
