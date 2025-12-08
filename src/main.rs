@@ -1,6 +1,6 @@
 use raytracing::bvh::BVHNode;
 use raytracing::quad::make_box;
-use raytracing::{color, material, quad, sphere, texture, vec3};
+use raytracing::{color, material, quad, rotate_y, sphere, texture, translate, vec3};
 use std::error::Error;
 use std::io::{BufWriter, stdout};
 
@@ -323,16 +323,15 @@ fn cornell_box() -> Result<(), Box<dyn Error>> {
         white
     ));
 
-    world.add(make_box(
-        &point3!(130, 0, 65),
-        &point3!(295, 165, 230),
-        white.clone(),
-    ));
-    world.add(make_box(
-        &point3!(265, 0, 295),
-        &point3!(430, 330, 460),
-        white,
-    ));
+    let box1 = make_box(&point3!(0, 0, 0), &point3!(165, 330, 165), white.clone());
+    let box1 = rotate_y!(box1, 15);
+    let box1 = translate!(box1, vec3!(265, 0, 295));
+    world.add(box1);
+
+    let box2 = make_box(&point3!(0, 0, 0), &point3!(165, 165, 165), white);
+    let box2 = rotate_y!(box2, -18);
+    let box2 = translate!(box2, vec3!(130, 0, 65));
+    world.add(box2);
 
     let cc = CameraConfig {
         aspect_ratio: 1.0,
