@@ -1,10 +1,32 @@
-use crate::{interval::Interval, ray::Ray, vec3::Point3};
+use std::ops::Add;
+
+use crate::{
+    interval::Interval,
+    ray::Ray,
+    vec3::{Point3, Vec3},
+};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct AABB {
     pub x: Interval,
     pub y: Interval,
     pub z: Interval,
+}
+
+impl Add<Vec3> for AABB {
+    type Output = Self;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        AABB::new(self.x + rhs.x(), self.y + rhs.y(), self.z + rhs.z())
+    }
+}
+
+impl Add<AABB> for Vec3 {
+    type Output = AABB;
+
+    fn add(self, rhs: AABB) -> Self::Output {
+        rhs + self
+    }
 }
 
 impl AABB {
