@@ -177,3 +177,29 @@ impl DiffuseLight {
         Self::new(Arc::new(SolidColor::new(emit)))
     }
 }
+
+#[derive(Clone)]
+pub struct Isotropic {
+    tex: Arc<dyn Texture>,
+}
+
+impl Material for Isotropic {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let scattered = Ray::new_with_time(rec.p, Vec3::random_unit_vector(), r_in.time());
+        let attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        Some(ScatterRecord {
+            attenuation,
+            scattered,
+        })
+    }
+}
+
+impl Isotropic {
+    pub fn new(tex: Arc<dyn Texture>) -> Self {
+        Self { tex }
+    }
+
+    pub fn new_from_color(albedo: &Color) -> Self {
+        Self::new(Arc::new(SolidColor::new(albedo)))
+    }
+}
