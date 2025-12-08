@@ -19,6 +19,24 @@ pub struct HitRecord {
     pub front_face: bool,
 }
 
+impl HitRecord {
+    pub fn new(t: f64, r: &Ray, normal: &Vec3, u: f64, v: f64, mat: Arc<dyn Material>) -> Self {
+        let p = r.at(t);
+        let front_face = r.direction().dot(normal) < 0.0;
+        let normal = if front_face { *normal } else { -*normal };
+
+        Self {
+            p,
+            normal,
+            mat,
+            t,
+            u,
+            v,
+            front_face,
+        }
+    }
+}
+
 pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, ray_t: Interval) -> Option<HitRecord>;
 

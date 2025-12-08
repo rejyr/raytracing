@@ -43,27 +43,10 @@ impl Hittable for Sphere {
 
         let t = root;
         let p = r.at(t);
-        let outward_normal = (p - current_center) / self.radius;
-        // TODO: refactor into function with more `Hittable`s?
-        let front_face = r.direction().dot(&outward_normal) < 0.0;
-        let normal = if front_face {
-            outward_normal
-        } else {
-            -outward_normal
-        };
-        let (u, v) = Self::get_sphere_uv(&outward_normal);
+        let normal = (p - current_center) / self.radius;
+        let (u, v) = Self::get_sphere_uv(&normal);
 
-        let hr = HitRecord {
-            p,
-            normal,
-            mat: self.mat.clone(),
-            t,
-            u,
-            v,
-            front_face,
-        };
-
-        Some(hr)
+        Some(HitRecord::new(t, r, &normal, u, v, self.mat.clone()))
     }
 
     fn bounding_box(&self) -> AABB {
