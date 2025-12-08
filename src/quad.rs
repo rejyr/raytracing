@@ -1,8 +1,10 @@
+use crate::quad;
 use std::sync::Arc;
 
 use crate::{
     aabb::AABB,
     hittable::{HitRecord, Hittable},
+    hittable_list::HittableList,
     interval::Interval,
     material::Material,
     ray::Ray,
@@ -84,6 +86,34 @@ impl Quad {
 
         (unit_interval.contains(a) && unit_interval.contains(b)).then_some((a, b))
     }
+}
+
+/// Returns the 3D box (six sides) that contains the two opposite vertices a & b.
+pub fn make_box(a: &Point3, b: &Point3, mat: Arc<dyn Material>) -> Arc<HittableList> {
+    let mut sides = HittableList::new();
+
+    // Construct the two opposite vertices with the minimum and maximum coordinates.
+    let min = Point3::new(a.x().min(b.x()), a.y().min(b.y()), a.z().min(b.z()));
+    let max = Point3::new(a.x().max(b.x()), a.y().max(b.y()), a.z().max(b.z()));
+
+    let dx = Vec3::new(max.x() - min.x(), 0.0, 0.0);
+    let dy = Vec3::new(0.0, max.y() - min.y(), 0.0);
+    let dz = Vec3::new(0.0, 0.0, max.z() - min.z());
+
+    // front
+    sides.add(quad!(Point3::new(min.x(), min.y(), max.z()), dx, dy, mat));
+    // right
+    sides.add(quad!(Point3::new(max.x(), min.y(), max.z()), -dz, dy, mat));
+    // back
+    sides.add(quad!(Point3::new(max.x(), min.y(), min.z()), -dx, dy, mat));
+    // left
+    sides.add(quad!(Point3::new(min.x(), min.y(), min.z()), dz, dy, mat));
+    // top
+    sides.add(quad!(Point3::new(min.x(), max.y(), max.z()), dx, -dz, mat));
+    // bottom
+    sides.add(quad!(Point3::new(min.x(), min.y(), min.z()), dx, dz, mat));
+
+    Arc::new(sides)
 }
 
 #[macro_export]
