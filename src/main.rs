@@ -539,7 +539,7 @@ fn final_scene(
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    match 0 {
+    match 9 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
