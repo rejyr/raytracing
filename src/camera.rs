@@ -74,6 +74,10 @@ pub struct Camera {
     image_height: usize,
     /// Color scale factor to for a sum of pixels
     pixel_samples_scale: f64,
+    /// Square root of number of samples per pixel
+    sqrt_spp: i32,
+    /// 1 / `sqrt_spp`
+    recip_sqrt_spp: f64,
     /// Camera center
     center: Point3,
     /// Location of pixel 0, 0
@@ -95,7 +99,9 @@ impl From<CameraConfig> for Camera {
             if image_height < 1 { 1 } else { image_height }
         };
 
-        let pixel_samples_scale = 1.0 / cc.samples_per_pixel as f64;
+        let sqrt_spp = cc.samples_per_pixel.isqrt();
+        let pixel_samples_scale = 1.0 / (sqrt_spp * sqrt_spp) as f64;
+        let recip_sqrt_spp = 1.0 / sqrt_spp as f64;
 
         let center = cc.lookfrom;
 
@@ -132,6 +138,8 @@ impl From<CameraConfig> for Camera {
             config: cc,
             image_height,
             pixel_samples_scale,
+            sqrt_spp,
+            recip_sqrt_spp,
             center,
             pixel100_loc,
             pixel_delta_u,
@@ -148,9 +156,9 @@ impl Camera {
     }
 
     /// Construct a camera ray originating from the origin and directed at randomly sampled point
-    /// around the pixel location i, j.
-    fn get_ray(&self, i: usize, j: usize) -> Ray {
-        let offset = Self::sample_square();
+    /// around the pixel location i, j for stratified sample square s_i, s_j.
+    fn get_ray(&self, i: usize, j: usize, s_i: i32, s_j: i32) -> Ray {
+        let offset = self.sample_square_stratified(s_i, s_j);
         let pixel_sample = self.pixel100_loc
             + ((i as f64 + offset.x()) * self.pixel_delta_u)
             + ((j as f64 + offset.y()) * self.pixel_delta_v);
@@ -164,6 +172,15 @@ impl Camera {
         let ray_time = random_f64();
 
         Ray::new_with_time(ray_origin, ray_direction, ray_time)
+    }
+
+    /// Returns the vector to a random point in the square sub-pixel specified by grid indices s_i
+    /// and s_j, for an idealized unit square pixel [-.5,-.5] to [+.5,+.5].
+    fn sample_square_stratified(&self, s_i: i32, s_j: i32) -> Vec3 {
+        let px = ((s_i as f64 + random_f64()) * self.recip_sqrt_spp) - 0.5;
+        let py = ((s_j as f64 + random_f64()) * self.recip_sqrt_spp) - 0.5;
+
+        Vec3::new(px, py, 0.0)
     }
 
     fn ray_color(&self, r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
@@ -188,6 +205,7 @@ impl Camera {
     }
 
     /// Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+    #[allow(dead_code)]
     fn sample_square() -> Vec3 {
         Vec3::new(random_f64() - 0.5, random_f64() - 0.5, 0.0)
     }
@@ -232,9 +250,11 @@ impl Camera {
 
     fn render_pixel(&self, i: usize, j: usize, world: &impl Hittable) -> Color {
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-        for _ in 0..self.config.samples_per_pixel {
-            let r = self.get_ray(i, j);
-            pixel_color += self.ray_color(&r, self.config.max_depth, world);
+        for s_j in 0..self.sqrt_spp {
+            for s_i in 0..self.sqrt_spp {
+                let r = self.get_ray(i, j, s_i, s_j);
+                pixel_color += self.ray_color(&r, self.config.max_depth, world);
+            }
         }
         self.pixel_samples_scale * pixel_color
     }
