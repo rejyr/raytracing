@@ -15,6 +15,10 @@ pub trait Material: Send + Sync {
     fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
+
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
+        0.0
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -66,6 +70,11 @@ impl Material for Lambertian {
             attenuation,
             scattered,
         })
+    }
+
+    fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cos_theta = rec.normal.dot(&scattered.direction().unit_vector());
+        (cos_theta / std::f64::consts::PI).max(0.0)
     }
 }
 
