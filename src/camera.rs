@@ -8,7 +8,9 @@ use rayon::iter::ParallelIterator;
 
 use crate::color::write_color;
 use crate::helper::random_f64;
+use crate::pdf::CosinePDF;
 use crate::pdf::HittablePDF;
+use crate::pdf::MixturePDF;
 use crate::pdf::PDF;
 use crate::{
     color::Color,
@@ -207,9 +209,12 @@ impl Camera {
             return color_from_emission;
         };
 
-        let light_pdf = HittablePDF::new(lights, &rec.p);
-        sr.scattered = Ray::new_with_time(rec.p, light_pdf.generate(), r.time());
-        let pdf_value = light_pdf.value(sr.scattered.direction());
+        let p0 = HittablePDF::new(lights, &rec.p);
+        let p1 = CosinePDF::new(&rec.normal);
+        let mixed_pdf = MixturePDF::new(&p0, &p1);
+
+        sr.scattered = Ray::new_with_time(rec.p, mixed_pdf.generate(), r.time());
+        let pdf_value = mixed_pdf.value(sr.scattered.direction());
 
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &sr.scattered);
 

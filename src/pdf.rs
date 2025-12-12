@@ -1,4 +1,5 @@
 use crate::{
+    helper::random_f64,
     hittable::Hittable,
     onb::ONB,
     vec3::{Point3, Vec3},
@@ -66,5 +67,29 @@ impl<'a> HittablePDF<'a> {
             objects,
             origin: *origin,
         }
+    }
+}
+
+pub struct MixturePDF<'a> {
+    p: [&'a dyn PDF; 2],
+}
+
+impl<'a> PDF for MixturePDF<'a> {
+    fn value(&self, direction: &Vec3) -> f64 {
+        0.5 * self.p[0].value(direction) + 0.5 * self.p[1].value(direction)
+    }
+
+    fn generate(&self) -> Vec3 {
+        if random_f64() < 0.5 {
+            self.p[0].generate()
+        } else {
+            self.p[1].generate()
+        }
+    }
+}
+
+impl<'a> MixturePDF<'a> {
+    pub fn new(p0: &'a dyn PDF, p1: &'a dyn PDF) -> Self {
+        Self { p: [p0, p1] }
     }
 }
