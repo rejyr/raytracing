@@ -1,5 +1,6 @@
 use crate::vec3::Vec3;
 
+#[derive(Debug, Clone)]
 pub struct ONB {
     axis: [Vec3; 3],
 }

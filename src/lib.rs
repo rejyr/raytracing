@@ -10,6 +10,7 @@ pub mod image;
 pub mod interval;
 pub mod material;
 pub mod onb;
+pub mod pdf;
 pub mod perlin;
 pub mod quad;
 pub mod ray;
