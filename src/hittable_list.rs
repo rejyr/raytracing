@@ -2,9 +2,11 @@ use std::sync::Arc;
 
 use crate::{
     aabb::AABB,
+    helper::random_i32_in_range,
     hittable::{HitRecord, Hittable},
     interval::Interval,
     ray::Ray,
+    vec3::{Point3, Vec3},
 };
 
 #[derive(Default)]
@@ -30,6 +32,20 @@ impl Hittable for HittableList {
 
     fn bounding_box(&self) -> AABB {
         self.bbox
+    }
+
+    fn pdf_value(&self, origin: &Vec3, direction: &Vec3) -> f64 {
+        let weight = 1.0 / self.objects.len() as f64;
+        self.objects
+            .iter()
+            .map(|object| weight * object.pdf_value(origin, direction))
+            .sum()
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        let int_len = self.objects.len() as i32;
+        let random_i = random_i32_in_range(0, int_len - 1) as usize;
+        self.objects[random_i].random(origin)
     }
 }
 

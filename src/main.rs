@@ -63,12 +63,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     world.add(sphere!(point3!(190, 90, 190), 90, glass));
 
     // Light sources
-    let lights = quad!(
+    let mut lights = HittableList::new();
+    lights.add(quad!(
         point3!(343, 554, 332),
         vec3!(-130, 0, 0),
         vec3!(0, 0, -105),
         light
-    );
+    ));
+    lights.add(sphere!(point3!(190, 90, 190), 90, glass));
 
     let cc = CameraConfig {
         aspect_ratio: 1.0,
@@ -86,7 +88,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cam = Camera::from_config(cc);
 
     let mut out = BufWriter::new(stdout());
-    cam.render(&mut out, &world, &*lights)?;
+    cam.render(&mut out, &world, &lights)?;
 
     Ok(())
 }
