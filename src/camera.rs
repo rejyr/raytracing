@@ -291,7 +291,11 @@ impl Camera {
         for s_j in 0..self.sqrt_spp {
             for s_i in 0..self.sqrt_spp {
                 let r = self.get_ray(i, j, s_i, s_j);
-                pixel_color += self.ray_color(&r, self.config.max_depth, world, lights);
+                let ray_color = self.ray_color(&r, self.config.max_depth, world, lights);
+                if ray_color.e.iter().any(|c| c.is_nan()) {
+                    continue;
+                };
+                pixel_color += ray_color;
             }
         }
         self.pixel_samples_scale * pixel_color
