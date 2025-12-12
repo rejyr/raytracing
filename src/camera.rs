@@ -194,7 +194,7 @@ impl Camera {
             return self.config.background;
         };
 
-        let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.p);
+        let color_from_emission = rec.mat.emitted(r, &rec, rec.u, rec.v, &rec.p);
 
         let Some(mut sr) = rec.mat.scatter(r, &rec) else {
             return color_from_emission;
