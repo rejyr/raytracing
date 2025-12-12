@@ -4,6 +4,7 @@ use crate::{
     color::Color,
     helper::random_f64,
     hittable::HitRecord,
+    onb::ONB,
     ray::Ray,
     texture::{SolidColor, Texture},
     vec3::{Point3, Vec3},
@@ -25,6 +26,7 @@ pub trait Material: Send + Sync {
 pub struct ScatterRecord {
     pub attenuation: Color,
     pub scattered: Ray,
+    pub pdf: f64,
 }
 
 #[macro_export]
@@ -56,19 +58,17 @@ pub struct Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+        let uvw = ONB::new(&rec.normal);
+        let scatter_direction = uvw.transform(&Vec3::random_cosine_direction());
 
-        // Catch degenerate scatter direction
-        if scatter_direction.is_near_zero() {
-            scatter_direction = rec.normal;
-        }
-
-        let scattered = Ray::new_with_time(rec.p, scatter_direction, r_in.time());
+        let scattered = Ray::new_with_time(rec.p, scatter_direction.unit_vector(), r_in.time());
         let attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        let pdf = uvw.w().dot(&scattered.direction()) / std::f64::consts::PI;
 
         Some(ScatterRecord {
             attenuation,
             scattered,
+            pdf,
         })
     }
 
@@ -103,6 +103,7 @@ impl Material for Metal {
         (scattered.direction().dot(&rec.normal) > 0.0).then_some(ScatterRecord {
             attenuation,
             scattered,
+            pdf: 0.0,
         })
     }
 }
@@ -145,6 +146,7 @@ impl Material for Dielectric {
         Some(ScatterRecord {
             attenuation,
             scattered,
+            pdf: 0.0,
         })
     }
 }
@@ -199,7 +201,12 @@ impl Material for Isotropic {
         Some(ScatterRecord {
             attenuation,
             scattered,
+            pdf: 1.0 / (4.0 * std::f64::consts::PI),
         })
+    }
+
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
+        1.0 / (4.0 * std::f64::consts::PI)
     }
 }
 
