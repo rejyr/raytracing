@@ -2,9 +2,11 @@ use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
     aabb::AABB,
+    helper::random_f64,
     hittable::{HitRecord, Hittable},
     interval::Interval,
     material::Material,
+    onb::ONB,
     ray::Ray,
     vec3::{Point3, Vec3},
 };
@@ -51,6 +53,32 @@ impl Hittable for Sphere {
 
     fn bounding_box(&self) -> AABB {
         self.bbox
+    }
+
+    fn pdf_value(&self, origin: &Point3, direction: &Vec3) -> f64 {
+        // This method only works for stational spheres
+        if self
+            .hit(
+                &Ray::new(*origin, *direction),
+                Interval::new(0.001, f64::INFINITY),
+            )
+            .is_none()
+        {
+            return 0.0;
+        };
+
+        let dist_squared = (self.center.at(0.0) - *origin).length_squared();
+        let cos_theta_max = (1.0 - self.radius * self.radius / dist_squared).sqrt();
+        let solid_angle = 2.0 * std::f64::consts::PI * (1.0 - cos_theta_max);
+
+        1.0 / solid_angle
+    }
+
+    fn random(&self, &origin: &Point3) -> Vec3 {
+        let direction = self.center.at(0.0) - origin;
+        let distance_squared = direction.length_squared();
+        let uvw = ONB::new(&direction);
+        uvw.transform(&Self::random_to_sphere(self.radius, distance_squared))
     }
 }
 
@@ -99,6 +127,18 @@ impl Sphere {
         let phi = (-p.z()).atan2(p.x()) + PI;
 
         (phi / (2.0 * PI), theta / PI)
+    }
+
+    fn random_to_sphere(radius: f64, distance_squared: f64) -> Vec3 {
+        let r1 = random_f64();
+        let r2 = random_f64();
+        let z = 1.0 + r2 * ((1.0 - radius * radius / distance_squared) - 1.0).sqrt();
+
+        let phi = 2.0 * std::f64::consts::PI * r1;
+        let x = phi.cos() * (1.0 - z * z).sqrt();
+        let y = phi.sin() * (1.0 - z * z).sqrt();
+
+        Vec3::new(x, y, z)
     }
 }
 

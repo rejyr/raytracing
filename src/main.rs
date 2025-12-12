@@ -1,5 +1,5 @@
 use raytracing::quad::make_box;
-use raytracing::{color, material, quad, rotate_y, translate, vec3};
+use raytracing::{color, material, quad, rotate_y, sphere, translate, vec3};
 use std::error::Error;
 use std::io::{BufWriter, stdout};
 
@@ -52,16 +52,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         white
     ));
 
-    let aluminum = material!(Metal(color!(0.8, 0.85, 0.88), 0.0));
-    let box1 = make_box(&point3!(0, 0, 0), &point3!(165, 330, 165), aluminum);
+    // Box
+    let box1 = make_box(&point3!(0, 0, 0), &point3!(165, 330, 165), white);
     let box1 = rotate_y!(box1, 15);
     let box1 = translate!(box1, vec3!(265, 0, 295));
     world.add(box1);
 
-    let box2 = make_box(&point3!(0, 0, 0), &point3!(165, 165, 165), white);
-    let box2 = rotate_y!(box2, -18);
-    let box2 = translate!(box2, vec3!(130, 0, 65));
-    world.add(box2);
+    // Glass Sphere
+    let glass = material!(Dielectric(1.5));
+    world.add(sphere!(point3!(190, 90, 190), 90, glass));
 
     // Light sources
     let lights = quad!(
