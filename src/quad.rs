@@ -53,9 +53,9 @@ impl Hittable for Quad {
         self.bbox
     }
 
-    fn pdf_value(&self, origin: &Point3, direction: &Vec3) -> f64 {
+    fn pdf_value(&self, &origin: &Point3, &direction: &Vec3) -> f64 {
         let Some(rec) = self.hit(
-            &Ray::new(*origin, *direction),
+            &Ray::new(origin, direction),
             Interval::new(0.001, f64::INFINITY),
         ) else {
             return 0.0;
@@ -67,36 +67,36 @@ impl Hittable for Quad {
         distance_squared / (cosine * self.area)
     }
 
-    fn random(&self, origin: &Point3) -> Vec3 {
+    fn random(&self, &origin: &Point3) -> Vec3 {
         let p = self.q + (random_f64() * self.u) + (random_f64() * self.v);
-        p - *origin
+        p - origin
     }
 }
 
 impl Quad {
-    pub fn new(q: &Point3, u: &Vec3, v: &Vec3, mat: Arc<dyn Material>) -> Self {
-        let n = u.cross(v);
+    pub fn new(&q: &Point3, &u: &Vec3, &v: &Vec3, mat: Arc<dyn Material>) -> Self {
+        let n = u.cross(&v);
         let normal = n.unit_vector();
-        let d = normal.dot(q);
+        let d = normal.dot(&q);
         let w = n / n.dot(&n);
 
         Self {
-            q: *q,
-            u: *u,
-            v: *v,
+            q,
+            u,
+            v,
             w,
             normal,
             d,
             area: n.length(),
             mat,
-            bbox: Self::get_bounding_box(q, u, v),
+            bbox: Self::get_bounding_box(&q, &u, &v),
         }
     }
 
     /// Compute the bounding box of all four vertices.
-    fn get_bounding_box(q: &Point3, u: &Vec3, v: &Vec3) -> AABB {
-        let bbox_diagonal1 = AABB::from_points(q, &(*q + *u + *v));
-        let bbox_diagonal2 = AABB::from_points(&(*q + *u), &(*q + *v));
+    fn get_bounding_box(&q: &Point3, &u: &Vec3, &v: &Vec3) -> AABB {
+        let bbox_diagonal1 = AABB::from_points(&q, &(q + u + v));
+        let bbox_diagonal2 = AABB::from_points(&(q + u), &(q + v));
         AABB::from_aabbs(&bbox_diagonal1, &bbox_diagonal2)
     }
 

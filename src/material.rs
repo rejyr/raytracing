@@ -110,11 +110,8 @@ impl Material for Metal {
 }
 
 impl Metal {
-    pub fn new(albedo: &Color, fuzz: f64) -> Self {
-        Self {
-            albedo: *albedo,
-            fuzz,
-        }
+    pub fn new(&albedo: &Color, fuzz: f64) -> Self {
+        Self { albedo, fuzz }
     }
 }
 

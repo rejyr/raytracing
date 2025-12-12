@@ -55,11 +55,11 @@ impl Hittable for Sphere {
         self.bbox
     }
 
-    fn pdf_value(&self, origin: &Point3, direction: &Vec3) -> f64 {
+    fn pdf_value(&self, &origin: &Point3, &direction: &Vec3) -> f64 {
         // This method only works for stational spheres
         if self
             .hit(
-                &Ray::new(*origin, *direction),
+                &Ray::new(origin, direction),
                 Interval::new(0.001, f64::INFINITY),
             )
             .is_none()
@@ -67,7 +67,7 @@ impl Hittable for Sphere {
             return 0.0;
         };
 
-        let dist_squared = (self.center.at(0.0) - *origin).length_squared();
+        let dist_squared = (self.center.at(0.0) - origin).length_squared();
         let cos_theta_max = (1.0 - self.radius * self.radius / dist_squared).sqrt();
         let solid_angle = 2.0 * std::f64::consts::PI * (1.0 - cos_theta_max);
 

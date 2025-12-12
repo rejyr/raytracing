@@ -62,11 +62,8 @@ impl<'a> PDF for HittablePDF<'a> {
 }
 
 impl<'a> HittablePDF<'a> {
-    pub fn new(objects: &'a dyn Hittable, origin: &Point3) -> Self {
-        Self {
-            objects,
-            origin: *origin,
-        }
+    pub fn new(objects: &'a dyn Hittable, &origin: &Point3) -> Self {
+        Self { objects, origin }
     }
 }
 

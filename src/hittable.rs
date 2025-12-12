@@ -20,10 +20,10 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(t: f64, r: &Ray, normal: &Vec3, u: f64, v: f64, mat: Arc<dyn Material>) -> Self {
+    pub fn new(t: f64, r: &Ray, &normal: &Vec3, u: f64, v: f64, mat: Arc<dyn Material>) -> Self {
         let p = r.at(t);
-        let front_face = r.direction().dot(normal) < 0.0;
-        let normal = if front_face { *normal } else { -*normal };
+        let front_face = r.direction().dot(&normal) < 0.0;
+        let normal = if front_face { normal } else { -normal };
 
         Self {
             p,
@@ -76,11 +76,11 @@ impl Hittable for Translate {
 }
 
 impl Translate {
-    pub fn new(object: Arc<dyn Hittable>, offset: &Vec3) -> Self {
+    pub fn new(object: Arc<dyn Hittable>, &offset: &Vec3) -> Self {
         Self {
-            bbox: object.bounding_box() + *offset,
+            bbox: object.bounding_box() + offset,
             object,
-            offset: *offset,
+            offset,
         }
     }
 }
