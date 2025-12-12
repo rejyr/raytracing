@@ -62,10 +62,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     let box2 = translate!(box2, vec3!(130, 0, 65));
     world.add(box2);
 
+    // Light sources
+    let lights = quad!(
+        point3!(343, 554, 332),
+        vec3!(-130, 0, 0),
+        vec3!(0, 0, -105),
+        light
+    );
+
     let cc = CameraConfig {
         aspect_ratio: 1.0,
         image_width: 600,
-        samples_per_pixel: 1000,
+        samples_per_pixel: 10,
         max_depth: 50,
         vfov: 40.0,
         lookfrom: point3!(278, 278, -800),
@@ -78,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cam = Camera::from_config(cc);
 
     let mut out = BufWriter::new(stdout());
-    cam.render(&mut out, &world)?;
+    cam.render(&mut out, &world, &*lights)?;
 
     Ok(())
 }

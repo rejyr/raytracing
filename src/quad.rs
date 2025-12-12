@@ -1,4 +1,4 @@
-use crate::quad;
+use crate::{helper::random_f64, quad};
 use std::sync::Arc;
 
 use crate::{
@@ -19,6 +19,7 @@ pub struct Quad {
     w: Vec3,
     normal: Vec3,
     d: f64,
+    area: f64,
     mat: Arc<dyn Material>,
     bbox: AABB,
 }
@@ -51,6 +52,25 @@ impl Hittable for Quad {
     fn bounding_box(&self) -> AABB {
         self.bbox
     }
+
+    fn pdf_value(&self, origin: &Point3, direction: &Vec3) -> f64 {
+        let Some(rec) = self.hit(
+            &Ray::new(*origin, *direction),
+            Interval::new(0.001, f64::INFINITY),
+        ) else {
+            return 0.0;
+        };
+
+        let distance_squared = rec.t * rec.t * direction.length_squared();
+        let cosine = direction.unit_vector().dot(&rec.normal).abs();
+
+        distance_squared / (cosine * self.area)
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        let p = self.q + (random_f64() * self.u) + (random_f64() * self.v);
+        p - *origin
+    }
 }
 
 impl Quad {
@@ -67,6 +87,7 @@ impl Quad {
             w,
             normal,
             d,
+            area: n.length(),
             mat,
             bbox: Self::get_bounding_box(q, u, v),
         }

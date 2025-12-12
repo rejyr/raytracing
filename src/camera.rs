@@ -8,7 +8,7 @@ use rayon::iter::ParallelIterator;
 
 use crate::color::write_color;
 use crate::helper::random_f64;
-use crate::pdf::CosinePDF;
+use crate::pdf::HittablePDF;
 use crate::pdf::PDF;
 use crate::{
     color::Color,
@@ -185,7 +185,13 @@ impl Camera {
         Vec3::new(px, py, 0.0)
     }
 
-    fn ray_color(&self, r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+    fn ray_color(
+        &self,
+        r: &Ray,
+        depth: i32,
+        world: &dyn Hittable,
+        lights: &impl Hittable,
+    ) -> Color {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
@@ -201,15 +207,14 @@ impl Camera {
             return color_from_emission;
         };
 
-        let surface_pdf = CosinePDF::new(&rec.normal);
-        sr.scattered = Ray::new_with_time(rec.p, surface_pdf.generate(), r.time());
-        let pdf_value = surface_pdf.value(sr.scattered.direction());
+        let light_pdf = HittablePDF::new(lights, &rec.p);
+        sr.scattered = Ray::new_with_time(rec.p, light_pdf.generate(), r.time());
+        let pdf_value = light_pdf.value(sr.scattered.direction());
 
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &sr.scattered);
 
-        let color_from_scatter =
-            (sr.attenuation * scattering_pdf * self.ray_color(&sr.scattered, depth - 1, world))
-                / pdf_value;
+        let sample_color = self.ray_color(&sr.scattered, depth - 1, world, lights);
+        let color_from_scatter = (sr.attenuation * scattering_pdf * sample_color) / pdf_value;
 
         color_from_emission + color_from_scatter
     }
@@ -226,7 +231,12 @@ impl Camera {
         self.center + (p[0] * self.defocus_disk_u) + (p[1] * self.defocus_disk_v)
     }
 
-    pub fn render(&self, out: &mut impl Write, world: &impl Hittable) -> Result<()> {
+    pub fn render(
+        &self,
+        out: &mut impl Write,
+        world: &impl Hittable,
+        lights: &impl Hittable,
+    ) -> Result<()> {
         let w = self.config.image_width;
         let h = self.image_height;
         // i = n % w, j = n / w
@@ -238,7 +248,7 @@ impl Camera {
         buf.par_iter_mut().enumerate().for_each(|(n, c)| {
             let i = n % w;
             let j = n / w;
-            *c = self.render_pixel(i, j, world);
+            *c = self.render_pixel(i, j, world, lights);
 
             if n % w == 0 {
                 let lines_done = lines_done.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
@@ -258,12 +268,18 @@ impl Camera {
         Ok(())
     }
 
-    fn render_pixel(&self, i: usize, j: usize, world: &impl Hittable) -> Color {
+    fn render_pixel(
+        &self,
+        i: usize,
+        j: usize,
+        world: &impl Hittable,
+        lights: &impl Hittable,
+    ) -> Color {
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         for s_j in 0..self.sqrt_spp {
             for s_i in 0..self.sqrt_spp {
                 let r = self.get_ray(i, j, s_i, s_j);
-                pixel_color += self.ray_color(&r, self.config.max_depth, world);
+                pixel_color += self.ray_color(&r, self.config.max_depth, world, lights);
             }
         }
         self.pixel_samples_scale * pixel_color

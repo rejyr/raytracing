@@ -1,4 +1,8 @@
-use crate::{onb::ONB, vec3::Vec3};
+use crate::{
+    hittable::Hittable,
+    onb::ONB,
+    vec3::{Point3, Vec3},
+};
 
 pub trait PDF {
     fn value(&self, direction: &Vec3) -> f64;
@@ -38,5 +42,29 @@ impl PDF for CosinePDF {
 impl CosinePDF {
     pub fn new(w: &Vec3) -> Self {
         Self { uvw: ONB::new(w) }
+    }
+}
+
+pub struct HittablePDF<'a> {
+    objects: &'a dyn Hittable,
+    origin: Point3,
+}
+
+impl<'a> PDF for HittablePDF<'a> {
+    fn value(&self, direction: &Vec3) -> f64 {
+        self.objects.pdf_value(&self.origin, direction)
+    }
+
+    fn generate(&self) -> Vec3 {
+        self.objects.random(&self.origin)
+    }
+}
+
+impl<'a> HittablePDF<'a> {
+    pub fn new(objects: &'a dyn Hittable, origin: &Point3) -> Self {
+        Self {
+            objects,
+            origin: *origin,
+        }
     }
 }
