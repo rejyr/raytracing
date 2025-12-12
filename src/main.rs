@@ -340,7 +340,7 @@ fn cornell_box() -> Result<(), Box<dyn Error>> {
     let cc = CameraConfig {
         aspect_ratio: 1.0,
         image_width: 600,
-        samples_per_pixel: 1000,
+        samples_per_pixel: 10,
         max_depth: 50,
         vfov: 40.0,
         lookfrom: point3!(278, 278, -800),

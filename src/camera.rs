@@ -8,6 +8,7 @@ use rayon::iter::ParallelIterator;
 
 use crate::color::write_color;
 use crate::helper::random_f64;
+use crate::helper::random_f64_in_range;
 use crate::{
     color::Color,
     hittable::Hittable,
@@ -195,12 +196,33 @@ impl Camera {
 
         let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.p);
 
-        let Some(sr) = rec.mat.scatter(r, &rec) else {
+        let Some(mut sr) = rec.mat.scatter(r, &rec) else {
             return color_from_emission;
         };
 
+        let on_light = Point3::new(
+            random_f64_in_range(213.0, 343.0),
+            554.0,
+            random_f64_in_range(227.0, 332.0),
+        );
+        let to_light = on_light - rec.p;
+        let distance_squared = to_light.length_squared();
+        let to_light = to_light.unit_vector();
+
+        if to_light.dot(&rec.normal) < 0.0 {
+            return color_from_emission;
+        }
+
+        let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+        let light_cosine = to_light.y().abs();
+        if light_cosine < 0.000001 {
+            return color_from_emission;
+        }
+
+        let pdf_value = distance_squared / (light_cosine * light_area);
+        sr.scattered = Ray::new_with_time(rec.p, to_light, r.time());
+
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &sr.scattered);
-        let pdf_value = scattering_pdf;
 
         let color_from_scatter =
             (sr.attenuation * scattering_pdf * self.ray_color(&sr.scattered, depth - 1, world))
