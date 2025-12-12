@@ -4,7 +4,7 @@ use crate::{
     color::Color,
     helper::random_f64,
     hittable::HitRecord,
-    onb::ONB,
+    pdf::{CosinePDF, PDF, SpherePDF},
     ray::Ray,
     texture::{SolidColor, Texture},
     vec3::{Point3, Vec3},
@@ -22,11 +22,16 @@ pub trait Material: Send + Sync {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ScatterRecord {
     pub attenuation: Color,
-    pub scattered: Ray,
-    pub pdf: f64,
+    pub surface: ScatterSurface,
+}
+
+#[derive(Clone)]
+pub enum ScatterSurface {
+    Diffuse { pdf: Arc<dyn PDF> },
+    Specular { skip_pdf_ray: Ray },
 }
 
 #[macro_export]
@@ -57,18 +62,13 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let uvw = ONB::new(&rec.normal);
-        let scatter_direction = uvw.transform(&Vec3::random_cosine_direction());
-
-        let scattered = Ray::new_with_time(rec.p, scatter_direction.unit_vector(), r_in.time());
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.tex.value(rec.u, rec.v, &rec.p);
-        let pdf = uvw.w().dot(&scattered.direction()) / std::f64::consts::PI;
+        let pdf = Arc::new(CosinePDF::new(&rec.normal));
 
         Some(ScatterRecord {
             attenuation,
-            scattered,
-            pdf,
+            surface: ScatterSurface::Diffuse { pdf },
         })
     }
 
@@ -96,14 +96,15 @@ pub struct Metal {
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let mut reflected = r_in.direction().reflect(&rec.normal);
-        reflected = reflected.unit_vector() + (self.fuzz * Vec3::random_unit_vector());
-        let scattered = Ray::new_with_time(rec.p, reflected, r_in.time());
+        let reflected = r_in.direction().reflect(&rec.normal);
+        let reflected = reflected.unit_vector() + (self.fuzz * Vec3::random_unit_vector());
+
         let attenuation = self.albedo;
-        (scattered.direction().dot(&rec.normal) > 0.0).then_some(ScatterRecord {
+        let skip_pdf_ray = Ray::new_with_time(rec.p, reflected, r_in.time());
+
+        Some(ScatterRecord {
             attenuation,
-            scattered,
-            pdf: 0.0,
+            surface: ScatterSurface::Specular { skip_pdf_ray },
         })
     }
 }
@@ -142,11 +143,10 @@ impl Material for Dielectric {
             unit_direction.refract(&rec.normal, ri)
         };
 
-        let scattered = Ray::new_with_time(rec.p, direction, r_in.time());
+        let skip_pdf_ray = Ray::new_with_time(rec.p, direction, r_in.time());
         Some(ScatterRecord {
             attenuation,
-            scattered,
-            pdf: 0.0,
+            surface: ScatterSurface::Specular { skip_pdf_ray },
         })
     }
 }
@@ -198,13 +198,12 @@ pub struct Isotropic {
 }
 
 impl Material for Isotropic {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let scattered = Ray::new_with_time(rec.p, Vec3::random_unit_vector(), r_in.time());
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        let pdf = Arc::new(SpherePDF);
         Some(ScatterRecord {
             attenuation,
-            scattered,
-            pdf: 1.0 / (4.0 * std::f64::consts::PI),
+            surface: ScatterSurface::Diffuse { pdf },
         })
     }
 

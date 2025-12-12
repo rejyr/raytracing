@@ -8,7 +8,7 @@ use rayon::iter::ParallelIterator;
 
 use crate::color::write_color;
 use crate::helper::random_f64;
-use crate::pdf::CosinePDF;
+use crate::material::ScatterSurface;
 use crate::pdf::HittablePDF;
 use crate::pdf::MixturePDF;
 use crate::pdf::PDF;
@@ -205,23 +205,30 @@ impl Camera {
 
         let color_from_emission = rec.mat.emitted(r, &rec, rec.u, rec.v, &rec.p);
 
-        let Some(mut sr) = rec.mat.scatter(r, &rec) else {
+        let Some(srec) = rec.mat.scatter(r, &rec) else {
             return color_from_emission;
         };
 
-        let p0 = HittablePDF::new(lights, &rec.p);
-        let p1 = CosinePDF::new(&rec.normal);
-        let mixed_pdf = MixturePDF::new(&p0, &p1);
+        match srec.surface {
+            ScatterSurface::Specular { skip_pdf_ray } => {
+                srec.attenuation * self.ray_color(&skip_pdf_ray, depth - 1, world, lights)
+            }
+            ScatterSurface::Diffuse { pdf } => {
+                let light_pdf = HittablePDF::new(lights, &rec.p);
+                let p = MixturePDF::new(&light_pdf, &*pdf);
 
-        sr.scattered = Ray::new_with_time(rec.p, mixed_pdf.generate(), r.time());
-        let pdf_value = mixed_pdf.value(sr.scattered.direction());
+                let scattered = Ray::new_with_time(rec.p, p.generate(), r.time());
+                let pdf_value = p.value(scattered.direction());
 
-        let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &sr.scattered);
+                let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
 
-        let sample_color = self.ray_color(&sr.scattered, depth - 1, world, lights);
-        let color_from_scatter = (sr.attenuation * scattering_pdf * sample_color) / pdf_value;
+                let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
+                let color_from_scatter =
+                    (srec.attenuation * scattering_pdf * sample_color) / pdf_value;
 
-        color_from_emission + color_from_scatter
+                color_from_emission + color_from_scatter
+            }
+        }
     }
 
     /// Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.

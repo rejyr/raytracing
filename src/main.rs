@@ -52,7 +52,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         white
     ));
 
-    let box1 = make_box(&point3!(0, 0, 0), &point3!(165, 330, 165), white.clone());
+    let aluminum = material!(Metal(color!(0.8, 0.85, 0.88), 0.0));
+    let box1 = make_box(&point3!(0, 0, 0), &point3!(165, 330, 165), aluminum);
     let box1 = rotate_y!(box1, 15);
     let box1 = translate!(box1, vec3!(265, 0, 295));
     world.add(box1);
